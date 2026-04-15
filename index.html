@@ -58,10 +58,6 @@
         <label>Word or phrase</label>
         <input type="text" id="searchInput" placeholder='e.g. "mother"' disabled>
     </div>
-    <div class="control-group" style="flex:1;">
-        <label>Compare with (optional)</label>
-        <input type="text" id="searchInput2" placeholder='e.g. "father"' disabled>
-    </div>
     <div class="control-group">
         <label>Speakers</label>
         <div class="bg gender" id="genderGroup">
@@ -121,7 +117,6 @@ async function loadData() {
     const mc = talks.filter(t => t.g === 'm').length;
     document.getElementById('status').textContent = `Loaded ${talks.length} talks (${wc} women, ${mc} men)`;
     document.getElementById('searchInput').disabled = false;
-    document.getElementById('searchInput2').disabled = false;
     document.getElementById('searchBtn').disabled = false;
     document.getElementById('searchInput').focus();
 }
@@ -137,7 +132,6 @@ function pick(btn, group) {
 }
 
 document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
-document.getElementById('searchInput2').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
 // Synonym groups — curated for conference talk context
 // Each group: type a key word, get all related forms + true synonyms
