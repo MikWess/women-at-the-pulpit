@@ -3,19 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Explorer — Women at the Pulpit</title>
+    <title>Women at the Pulpit</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg:#FAF6F0; --card:#FFFFFF; --text:#2C2420; --muted:#6B5D52; --border:#E0D6CC; --accent:#8C7058; --female:#B35488; --male:#4A7FA5; --green:#27864A; --yellow:#D4890A; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'IBM Plex Sans',sans-serif; background:var(--bg); color:var(--text); padding:2rem; max-width:960px; margin:0 auto; }
-        h1 { font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:400; font-style:italic; margin-bottom:0.25rem; }
+        h1 { font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:400; font-style:italic; margin-bottom:0.25rem; }
+        h2 { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:400; font-style:italic; margin-bottom:0.4rem; }
+        h3 { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; margin:1.2rem 0 0.4rem; }
+        .site-sub { color:var(--muted); font-size:0.9rem; margin-bottom:1.5rem; }
+        .tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:1.5rem; flex-wrap:wrap; }
+        .tab { padding:0.7rem 1.1rem; background:none; border:none; font-family:inherit; font-size:0.9rem; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.15s; font-weight:500; }
+        .tab:hover { color:var(--text); }
+        .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+        .panel { display:none; }
+        .panel.active { display:block; }
         .subtitle { color:var(--muted); font-size:0.85rem; margin-bottom:1.5rem; }
+        .headline { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:400; line-height:1.4; margin-bottom:0.5rem; color:var(--text); }
+        .headline em { font-style:italic; color:var(--accent); }
+        .sub-headline { color:var(--muted); font-size:0.9rem; margin-bottom:1.5rem; line-height:1.5; }
         .controls { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.25rem; margin-bottom:1.5rem; display:flex; gap:1rem; align-items:end; flex-wrap:wrap; }
         .control-group { display:flex; flex-direction:column; gap:0.3rem; }
         .control-group label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); font-weight:500; }
         input[type="text"] { font-family:'IBM Plex Mono',monospace; font-size:0.95rem; padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:5px; width:260px; background:var(--bg); }
+        input[type="range"] { width:180px; }
         input:focus { outline:none; border-color:var(--accent); }
         .bg { display:flex; border:1px solid var(--border); border-radius:5px; overflow:hidden; }
         .bg button { padding:0.4rem 0.65rem; font-size:0.74rem; font-family:inherit; border:none; background:var(--card); cursor:pointer; border-right:1px solid var(--border); transition:all 0.15s; white-space:nowrap; }
@@ -36,90 +49,409 @@
         #status { font-size:0.8rem; color:var(--muted); margin-bottom:1rem; }
         .help { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; font-size:0.82rem; color:var(--muted); line-height:1.6; }
         .help strong { color:var(--text); }
-        @media (max-width:640px) { body{padding:1rem;} input[type="text"]{width:100%;} .controls{flex-direction:column;align-items:stretch;} }
+        .two-col { display:grid; grid-template-columns:280px 1fr; gap:1rem; }
+        .speaker-list { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:0.5rem; max-height:520px; overflow-y:auto; }
+        .speaker-item { padding:0.5rem 0.75rem; border-radius:5px; cursor:pointer; display:flex; justify-content:space-between; font-size:0.85rem; }
+        .speaker-item:hover { background:var(--bg); }
+        .speaker-item.selected { background:var(--accent); color:white; }
+        .speaker-item .count { color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:0.78rem; }
+        .speaker-item.selected .count { color:rgba(255,255,255,0.8); }
+        .speaker-item .f-dot { color:var(--female); }
+        .speaker-item .m-dot { color:var(--male); }
+        .surp-list { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:0.5rem; }
+        .surp-item { display:grid; grid-template-columns:1fr auto; padding:0.5rem 0.75rem; border-radius:5px; cursor:pointer; align-items:center; gap:0.75rem; }
+        .surp-item:hover { background:var(--bg); }
+        .surp-word { font-family:'IBM Plex Mono',monospace; font-size:0.9rem; }
+        .surp-bar { display:flex; align-items:center; height:14px; min-width:120px; }
+        .surp-bar-w, .surp-bar-m { height:100%; }
+        .surp-bar-w { background:var(--female); }
+        .surp-bar-m { background:var(--male); }
+        .surp-num { font-family:'IBM Plex Mono',monospace; font-size:0.78rem; color:var(--muted); min-width:90px; text-align:right; }
+        .about { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.75rem 2rem; line-height:1.7; font-size:0.95rem; }
+        .about p { margin-bottom:1rem; }
+        .about h3 { margin-top:1.5rem; }
+        .about a { color:var(--accent); }
+        .about ul { margin:0.5rem 0 1rem 1.2rem; }
+        .about li { margin-bottom:0.3rem; }
+        .hist-cell { padding:0.3rem 0.6rem; font-family:'IBM Plex Mono',monospace; font-size:0.8rem; }
+        .topic-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:0.8rem; }
+        .topic-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.1rem; cursor:pointer; transition:all 0.15s; }
+        .topic-card:hover { border-color:var(--accent); transform:translateY(-1px); }
+        .topic-card.active { border-color:var(--accent); background:#F5EEE4; }
+        .topic-card-name { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.15rem; margin-bottom:0.3rem; }
+        .topic-card-count { font-family:'IBM Plex Mono',monospace; font-size:0.78rem; color:var(--muted); margin-bottom:0.6rem; }
+        .topic-split-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; margin-bottom:0.35rem; }
+        .topic-split-bar .f { background:var(--female); }
+        .topic-split-bar .m { background:var(--male); }
+        .topic-split-label { font-size:0.72rem; color:var(--muted); display:flex; justify-content:space-between; }
+        .topic-split-label .f { color:var(--female); font-weight:500; }
+        .topic-split-label .m { color:var(--male); font-weight:500; }
+        .sample-list { background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+        .sample-row { display:grid; grid-template-columns:60px 1fr auto 60px; gap:0.75rem; padding:0.6rem 1rem; border-bottom:1px solid var(--border); align-items:center; font-size:0.85rem; }
+        .sample-row:last-child { border-bottom:none; }
+        .sample-year { font-family:'IBM Plex Mono',monospace; color:var(--muted); font-size:0.8rem; }
+        .sample-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1rem; }
+        .sample-speaker { color:var(--muted); font-size:0.8rem; }
+        .sample-speaker .f { color:var(--female); }
+        .sample-speaker .m { color:var(--male); }
+        .sample-rate { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:var(--muted); text-align:right; }
+        @media (max-width:720px) {
+            body{padding:1rem;}
+            input[type="text"]{width:100%;}
+            .controls{flex-direction:column;align-items:stretch;}
+            .two-col{grid-template-columns:1fr;}
+            .tab{padding:0.55rem 0.75rem;font-size:0.82rem;}
+        }
     </style>
 </head>
 <body>
 
-<h1>Word Explorer</h1>
-<p class="subtitle">Search any word or phrase across 4,001 General Conference talks (1971–2025).</p>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+    <div>
+        <h1>Women at the Pulpit</h1>
+        <p class="site-sub">4,001 General Conference talks (1971–2025), searchable, sliceable.</p>
+    </div>
+    <a href="https://github.com/MikWess/women-at-the-pulpit" target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:var(--muted);text-decoration:none;padding:0.45rem 0.8rem;border:1px solid var(--border);border-radius:5px;background:var(--card);margin-top:0.4rem;transition:all 0.15s;"
+       onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'"
+       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+    </a>
+</div>
+
+<div class="tabs" id="tabs">
+    <button class="tab active" data-tab="word">Word frequency</button>
+    <button class="tab" data-tab="freq">Talk frequency</button>
+    <button class="tab" data-tab="length">Talk length</button>
+    <button class="tab" data-tab="who">Who speaks</button>
+    <button class="tab" data-tab="topics">Topics</button>
+    <button class="tab" data-tab="surp">Surprising words</button>
+    <button class="tab" data-tab="about">About</button>
+</div>
+
 <div id="status"><em>Loading database...</em></div>
 
-<div class="help">
-    <strong>Metric modes explained:</strong><br>
-    <strong>Per 10k words</strong> — frequency normalized by total words spoken. "How dense is this word in speech?" Fair comparison across groups of different sizes.<br>
-    <strong>Raw count</strong> — just how many times the word appears. Bigger groups say everything more, so this is best for seeing absolute volume.<br>
-    <strong>% of talks</strong> — what percentage of talks contain this word at least once. "How widespread is this topic?" A word could appear 50 times in 1 talk or 1 time in 50 talks — this tells you which.<br>
-    <strong>Per talk avg</strong> — average number of times the word appears per talk. "When someone DOES talk, how much do they say it?"
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: WORD FREQUENCY
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-word">
+    <div class="headline">Type any word. See how often <em>women</em> and <em>men</em> say it.</div>
+    <div class="sub-headline">Searches are case-insensitive with word-boundary matching. Toggle "+ synonyms" to group related forms (e.g. mother / mothers / motherhood / maternal).</div>
+
+    <div class="help">
+        <strong>Per 10k words</strong> — frequency normalized by total words spoken. Fair comparison across groups of different sizes.<br>
+        <strong>Raw count</strong> — how many times the word appears. Bigger groups say everything more.<br>
+        <strong>% of talks</strong> — what percentage of talks contain this word at least once. "How widespread is this topic?"<br>
+        <strong>Per talk avg</strong> — average occurrences per talk. "When someone DOES talk, how much do they say it?"
+    </div>
+
+    <div class="controls">
+        <div class="control-group" style="flex:1;">
+            <label>Word or phrase</label>
+            <input type="text" id="searchInput" placeholder='e.g. "mother"' disabled>
+        </div>
+        <div class="control-group">
+            <label>Speakers</label>
+            <div class="bg gender" id="genderGroup">
+                <button class="active" data-v="both" onclick="pick(this,'gender')">Both</button>
+                <button data-v="women" onclick="pick(this,'gender')">Women</button>
+                <button data-v="men" onclick="pick(this,'gender')">Men</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Metric</label>
+            <div class="bg" id="metricGroup">
+                <button class="active" data-v="rate" onclick="pick(this,'metric')">Per 10k</button>
+                <button data-v="raw" onclick="pick(this,'metric')">Raw count</button>
+                <button data-v="pct" onclick="pick(this,'metric')">% of talks</button>
+                <button data-v="avg" onclick="pick(this,'metric')">Per talk avg</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Group by</label>
+            <div class="bg" id="timeGroup">
+                <button class="active" data-v="year" onclick="pick(this,'time')">Year</button>
+                <button data-v="session" onclick="pick(this,'time')">Session</button>
+                <button data-v="decade" onclick="pick(this,'time')">Decade</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Session</label>
+            <div class="bg" id="sessionGroup">
+                <button class="active" data-v="all" onclick="pick(this,'session')">All</button>
+                <button data-v="general" onclick="pick(this,'session')">General</button>
+                <button data-v="women" onclick="pick(this,'session')">Women's</button>
+                <button data-v="priesthood" onclick="pick(this,'session')">Priesthood</button>
+            </div>
+        </div>
+        <div class="control-group" style="justify-content:end;">
+            <label>&nbsp;</label>
+            <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.82rem;text-transform:none;letter-spacing:0;color:var(--text);">
+                <input type="checkbox" id="synonymToggle" onchange="if(document.getElementById('searchInput').value)doSearch()"> + synonyms
+            </label>
+        </div>
+        <button class="search-btn" id="searchBtn" onclick="doSearch()" disabled>Search</button>
+    </div>
+
+    <div class="chart-container"><canvas id="chart" height="100"></canvas></div>
+    <div class="stats" id="statsPanel" style="display:none;"></div>
 </div>
 
-<div class="controls">
-    <div class="control-group" style="flex:1;">
-        <label>Word or phrase</label>
-        <input type="text" id="searchInput" placeholder='e.g. "mother"' disabled>
-    </div>
-    <div class="control-group">
-        <label>Speakers</label>
-        <div class="bg gender" id="genderGroup">
-            <button class="active" data-v="both" onclick="pick(this,'gender')">Both</button>
-            <button data-v="women" onclick="pick(this,'gender')">Women</button>
-            <button data-v="men" onclick="pick(this,'gender')">Men</button>
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: TALK FREQUENCY (talks per year, W/M split)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-freq">
+    <div class="headline" id="freqHeadline">How often do women speak at General Conference?</div>
+    <div class="sub-headline">Every talk counted, split by gender, year by year. The pink line tracks women's share of the pulpit.</div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>View</label>
+            <div class="bg" id="freqViewGroup">
+                <button class="active" data-v="counts" onclick="pickFreq(this,'view')">Talk counts</button>
+                <button data-v="pct" onclick="pickFreq(this,'view')">% women</button>
+                <button data-v="both" onclick="pickFreq(this,'view')">Both</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Breakdown</label>
+            <div class="bg gender" id="freqBreakdownGroup">
+                <button class="active" data-v="split" onclick="pickFreq(this,'breakdown')">Split W/M</button>
+                <button data-v="total" onclick="pickFreq(this,'breakdown')">Total</button>
+                <button data-v="women" onclick="pickFreq(this,'breakdown')">Women only</button>
+                <button data-v="men" onclick="pickFreq(this,'breakdown')">Men only</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Group by</label>
+            <div class="bg" id="freqGroupByGroup">
+                <button class="active" data-v="year" onclick="pickFreq(this,'groupby')">Year</button>
+                <button data-v="decade" onclick="pickFreq(this,'groupby')">Decade</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Session</label>
+            <div class="bg" id="freqSessionGroup">
+                <button class="active" data-v="all" onclick="pickFreq(this,'session')">All</button>
+                <button data-v="general" onclick="pickFreq(this,'session')">General</button>
+                <button data-v="women" onclick="pickFreq(this,'session')">Women's</button>
+                <button data-v="priesthood" onclick="pickFreq(this,'session')">Priesthood</button>
+            </div>
         </div>
     </div>
-    <div class="control-group">
-        <label>Metric</label>
-        <div class="bg" id="metricGroup">
-            <button class="active" data-v="rate" onclick="pick(this,'metric')">Per 10k</button>
-            <button data-v="raw" onclick="pick(this,'metric')">Raw count</button>
-            <button data-v="pct" onclick="pick(this,'metric')">% of talks</button>
-            <button data-v="avg" onclick="pick(this,'metric')">Per talk avg</button>
-        </div>
-    </div>
-    <div class="control-group">
-        <label>Group by</label>
-        <div class="bg" id="timeGroup">
-            <button class="active" data-v="year" onclick="pick(this,'time')">Year</button>
-            <button data-v="session" onclick="pick(this,'time')">Session</button>
-            <button data-v="decade" onclick="pick(this,'time')">Decade</button>
-        </div>
-    </div>
-    <div class="control-group">
-        <label>Session</label>
-        <div class="bg" id="sessionGroup">
-            <button class="active" data-v="all" onclick="pick(this,'session')">All</button>
-            <button data-v="general" onclick="pick(this,'session')">General</button>
-            <button data-v="women" onclick="pick(this,'session')">Women's</button>
-            <button data-v="priesthood" onclick="pick(this,'session')">Priesthood</button>
-        </div>
-    </div>
-    <div class="control-group" style="justify-content:end;">
-        <label>&nbsp;</label>
-        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.82rem;text-transform:none;letter-spacing:0;color:var(--text);">
-            <input type="checkbox" id="synonymToggle" onchange="if(document.getElementById('searchInput').value)doSearch()"> + synonyms
-        </label>
-    </div>
-    <button class="search-btn" id="searchBtn" onclick="doSearch()" disabled>Search</button>
+
+    <div class="chart-container"><canvas id="freqChart" height="110"></canvas></div>
+    <div class="stats" id="freqStats"></div>
 </div>
 
-<div class="chart-container"><canvas id="chart" height="100"></canvas></div>
-<div class="stats" id="statsPanel" style="display:none;"></div>
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: TALK LENGTH
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-length">
+    <div class="headline" id="lengthHeadline">How long do women speak compared to men?</div>
+    <div class="sub-headline">Each talk's word count, bucketed. Move the sliders to see the distribution shift.</div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Compare</label>
+            <div class="bg gender" id="lenGenderGroup">
+                <button class="active" data-v="both" onclick="pickLen(this,'gender')">Both</button>
+                <button data-v="split" onclick="pickLen(this,'gender')">Split W/M</button>
+                <button data-v="women" onclick="pickLen(this,'gender')">Women only</button>
+                <button data-v="men" onclick="pickLen(this,'gender')">Men only</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Session</label>
+            <div class="bg" id="lenSessionGroup">
+                <button class="active" data-v="all" onclick="pickLen(this,'session')">All</button>
+                <button data-v="general" onclick="pickLen(this,'session')">General</button>
+                <button data-v="women" onclick="pickLen(this,'session')">Women's</button>
+                <button data-v="priesthood" onclick="pickLen(this,'session')">Priesthood</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Year range: <span id="lenYearLabel">1971–2025</span></label>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+                <input type="range" id="lenYearMin" min="1971" max="2025" value="1971">
+                <input type="range" id="lenYearMax" min="1971" max="2025" value="2025">
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container"><canvas id="lenChart" height="110"></canvas></div>
+    <div class="stats" id="lenStats"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: WHO SPEAKS
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-who">
+    <div class="headline" id="whoHeadline">Who gets invited back to the pulpit?</div>
+    <div class="sub-headline">The top 10 speakers of all time have given <strong id="whoTop10Pct">—</strong> of all talks. Click a name to see their arc.</div>
+
+    <div class="controls">
+        <div class="control-group" style="flex:1;">
+            <label>Filter speakers</label>
+            <input type="text" id="whoFilter" placeholder="Type a name...">
+        </div>
+        <div class="control-group">
+            <label>Show</label>
+            <div class="bg gender" id="whoGenderGroup">
+                <button class="active" data-v="both" onclick="pickWho(this)">All</button>
+                <button data-v="women" onclick="pickWho(this)">Women</button>
+                <button data-v="men" onclick="pickWho(this)">Men</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="two-col">
+        <div class="speaker-list" id="speakerList"></div>
+        <div>
+            <div class="chart-container"><canvas id="whoChart" height="110"></canvas></div>
+            <div class="stats" id="whoStats" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: TOPICS
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-topics">
+    <div class="headline">What do people talk about at General Conference?</div>
+    <div class="sub-headline">Each talk scored for its vocabulary density across 18 topic areas. Talks aren't forced into a single bucket — the cards below show the talks where each topic is <em>most concentrated</em>. Click a card to see the trend and examples.</div>
+
+    <div id="topicGrid" class="topic-grid"></div>
+
+    <div id="topicDetail" style="display:none;margin-top:1.5rem;">
+        <div class="chart-container"><canvas id="topicChart" height="110"></canvas></div>
+        <div class="stats" id="topicStats"></div>
+        <h3 id="topicSampleHeader" style="margin-top:1.5rem;">Sample talks</h3>
+        <div class="sample-list" id="topicSampleList"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: SURPRISING WORDS
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-surp">
+    <div class="headline">Which words are most skewed — and which have changed the most?</div>
+    <div class="sub-headline">Ranked automatically across the whole corpus. Click any word to jump to the frequency explorer.</div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Ranking</label>
+            <div class="bg" id="surpModeGroup">
+                <button class="active" data-v="gender" onclick="pickSurp(this)">By gender gap</button>
+                <button data-v="trend" onclick="pickSurp(this)">By time trend</button>
+            </div>
+        </div>
+        <div class="control-group" style="flex:1;justify-content:end;align-items:end;">
+            <span class="stat-label" id="surpSubtitle" style="font-family:'IBM Plex Sans',sans-serif;text-transform:none;letter-spacing:0;font-size:0.8rem;color:var(--muted);">Top 50 words where women and men differ most (per 10k words)</span>
+        </div>
+    </div>
+
+    <div class="surp-list" id="surpList"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB: ABOUT
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-about">
+    <div class="about">
+        <h2>About this project</h2>
+        <p>Built by <strong>Mikey Wessman</strong>, who is interested in understanding human behavior at every level. This is a tool, not an argument. Poke around.</p>
+
+        <h3>What you're looking at</h3>
+        <p>Every General Conference talk given by the Church of Jesus Christ of Latter-day Saints from 1971 through 2025 — 4,001 talks in total — scraped from <a href="https://www.churchofjesuschrist.org/study/general-conference" target="_blank">churchofjesuschrist.org</a> and made searchable by word, gender, session, year, and speaker.</p>
+
+        <h3>Where the data came from</h3>
+        <ul>
+            <li><strong>Talks:</strong> scraped directly from the church's public General Conference archive. Each talk's full text, speaker, year, session, and session type (general / women's / priesthood).</li>
+            <li><strong>Speaker genders:</strong> tagged in <code>speaker_genders.csv</code>. The overwhelming majority were straightforward (the archive lists callings and pronouns). Ambiguous cases were reviewed manually.</li>
+            <li><strong>Session types:</strong> pulled from the archive's own session labels.</li>
+            <li><strong>Code and raw data:</strong> <a href="https://github.com/MikWess/women-at-the-pulpit" target="_blank">github.com/MikWess/women-at-the-pulpit</a>. Clone it, run the scripts, verify anything you want.</li>
+        </ul>
+
+        <h3>Methodology notes</h3>
+        <ul>
+            <li><strong>Word matching.</strong> The word-frequency tool uses word-boundary matching — searching "mother" finds "mother" but not "grandmother" or "mothers". Toggle <em>+ synonyms</em> to include morphological variants and related terms (curated, not algorithmic).</li>
+            <li><strong>"Per 10k words"</strong> is the fairest metric for comparing groups of different sizes. Women have given roughly 6% of talks; raw counts will always favor men. Rate-per-10k-words strips that away.</li>
+            <li><strong>Statistical significance.</strong> Gender comparisons use a two-proportion z-test on word-level rates. p &lt; 0.05 is marked as significant.</li>
+            <li><strong>"Surprising words"</strong> are ranked by absolute difference in per-10k rates (for gender gap) or by linear regression slope across years (for time trend). Words appearing fewer than 200 times corpus-wide are excluded to reduce noise.</li>
+            <li><strong>"Topics"</strong> are not machine-learned clusters — they're 18 curated keyword sets (e.g. the "Priesthood Authority" topic watches for phrases like <em>aaronic priesthood</em>, <em>melchizedek priesthood</em>, <em>priesthood keys</em>). For each topic, a talk's score is the rate of those keywords per 10,000 words. A talk isn't forced into a single topic — the Topics tab instead ranks talks by how <em>densely</em> each topic appears and shows the top-scoring ones. This avoids the problem of keyword overlap (Jesus Christ and Atonement both mention "savior") while still surfacing which speakers lean into which themes.</li>
+        </ul>
+
+        <h3>What this tool <em>doesn't</em> account for</h3>
+        <ul>
+            <li>Women's-session talks are included in "all" by default. Filter to "general session" only if you want to compare apples-to-apples on the biggest stage.</li>
+            <li>Before 1978, women's talks were rare in General Conference specifically. The data reflects that — the rate of women speakers climbs sharply in the 1980s onward.</li>
+            <li>Topic isn't labeled. Word frequency is a proxy for topic, not a substitute. A word being frequent in women's talks doesn't prove women "care more" about it — it could also be a function of what women have been asked to speak on.</li>
+            <li>Quoting the scriptures or each other inflates certain words across everyone.</li>
+            <li><strong>Procedural / facilitation talks are included.</strong> Sustaining of officers, statistical reports, conference-opening and conference-closing remarks, and other short administrative items are counted as "talks" alongside sermons. They're almost always given by men in senior callings, and they skew the talk-length distribution toward shorter lengths and inflate a handful of top male speakers' talk counts. There's no clean automated way to strip these out — a future version of this tool may flag them explicitly.</li>
+        </ul>
+
+        <h3>Credits</h3>
+        <ul>
+            <li>Interface: plain HTML/CSS/JS + <a href="https://www.chartjs.org/" target="_blank">Chart.js</a>.</li>
+            <li>Typography: Cormorant Garamond, IBM Plex Sans, IBM Plex Mono.</li>
+            <li>Data pipeline: Python + pandas. See <code>scrape.py</code>, <code>tag_sessions.py</code>, <code>build_gender_table.py</code> in the repo.</li>
+        </ul>
+
+        <p style="color:var(--muted);font-size:0.85rem;margin-top:2rem;">If you find something wrong, file an issue on GitHub. If you find something interesting, tell me.</p>
+    </div>
+</div>
 
 <script>
-let talks = [];
-let gender = 'both', metric = 'rate', timeMode = 'year', sessionType = 'all';
-let chart = null, minYear = 1971;
+// ═══════════════════════════════════════════════════════════
+//                         SHARED STATE
+// ═══════════════════════════════════════════════════════════
+let talks = [], surprising = null, topicsData = null;
+let minYear = 1971, maxYear = 2025;
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+});
 
 async function loadData() {
-    const resp = await fetch('data/talks.json');
-    talks = await resp.json();
+    const [talksResp, surpResp, topicsResp] = await Promise.all([
+        fetch('data/talks.json'),
+        fetch('data/surprising.json'),
+        fetch('data/topics.json'),
+    ]);
+    talks = await talksResp.json();
+    surprising = await surpResp.json();
+    topicsData = await topicsResp.json();
     minYear = Math.min(...talks.map(t => t.y));
+    maxYear = Math.max(...talks.map(t => t.y));
     const wc = talks.filter(t => t.g === 'f').length;
     const mc = talks.filter(t => t.g === 'm').length;
-    document.getElementById('status').textContent = `Loaded ${talks.length} talks (${wc} women, ${mc} men)`;
+    document.getElementById('status').textContent = `Loaded ${talks.length} talks — ${wc} by women, ${mc} by men, ${minYear}–${maxYear}.`;
+
+    // Enable word tab
     document.getElementById('searchInput').disabled = false;
     document.getElementById('searchBtn').disabled = false;
-    document.getElementById('searchInput').focus();
+
+    // Init other tabs
+    initFreq();
+    initLength();
+    initWho();
+    initTopics();
+    initSurp();
 }
+
+// ═══════════════════════════════════════════════════════════
+//            TAB 1: WORD FREQUENCY (existing logic)
+// ═══════════════════════════════════════════════════════════
+let gender = 'both', metric = 'rate', timeMode = 'year', sessionType = 'all';
+let chart = null;
 
 function pick(btn, group) {
     btn.closest('.bg').querySelectorAll('button').forEach(b => b.classList.remove('active'));
@@ -133,11 +465,7 @@ function pick(btn, group) {
 
 document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
-// Synonym groups — curated for conference talk context
-// Each group: type a key word, get all related forms + true synonyms
-// Built from WordNet + manual curation, filtered to words appearing 20+ times in corpus
 const SYNONYMS = {
-    // ── People & relationships ──
     'mother': ['mother', 'mothers', 'motherhood', 'mothering', 'maternal'],
     'father': ['father', 'fathers', 'fatherhood', 'fathering', 'paternal'],
     'woman': ['woman', 'women', 'womanhood', 'feminine', 'femininity', 'female'],
@@ -147,8 +475,6 @@ const SYNONYMS = {
     'marriage': ['marriage', 'marry', 'married', 'wedding', 'spouse', 'husband', 'wife'],
     'sister': ['sister', 'sisters', 'sisterhood'],
     'brother': ['brother', 'brothers', 'brotherhood', 'brethren'],
-
-    // ── Emotions & states ──
     'love': ['love', 'loved', 'loves', 'loving', 'beloved', 'affection'],
     'joy': ['joy', 'joyful', 'joyous', 'rejoice', 'rejoicing', 'happiness', 'happy', 'glad', 'gladness', 'delight'],
     'peace': ['peace', 'peaceful', 'peacefully', 'peacemaker', 'serenity', 'calm'],
@@ -159,8 +485,6 @@ const SYNONYMS = {
     'grateful': ['grateful', 'gratitude', 'thankful', 'thankfulness', 'appreciate', 'appreciation'],
     'pride': ['pride', 'proud', 'prideful', 'vanity', 'vain', 'arrogance', 'arrogant'],
     'humble': ['humble', 'humbled', 'humbly', 'humility', 'meek', 'meekness', 'lowly'],
-
-    // ── Virtues & character ──
     'faith': ['faith', 'faithful', 'faithfully', 'faithfulness'],
     'courage': ['courage', 'courageous', 'bravery', 'brave', 'boldness', 'bold'],
     'patience': ['patience', 'patient', 'patiently', 'forbearance', 'longsuffering'],
@@ -170,8 +494,6 @@ const SYNONYMS = {
     'virtue': ['virtue', 'virtuous', 'virtuousness', 'righteousness', 'righteous'],
     'chastity': ['chastity', 'chaste', 'purity', 'pure', 'morality', 'moral', 'modesty', 'modest'],
     'wisdom': ['wisdom', 'wise', 'wisely', 'discernment', 'discern', 'prudent', 'prudence'],
-
-    // ── Actions & practices ──
     'pray': ['pray', 'prayed', 'praying', 'prayer', 'prayers', 'prayerful', 'supplication'],
     'serve': ['serve', 'served', 'serving', 'service', 'servant', 'servants', 'ministry', 'minister'],
     'teach': ['teach', 'taught', 'teaching', 'teachings', 'teacher', 'instruct', 'instruction'],
@@ -182,16 +504,12 @@ const SYNONYMS = {
     'worship': ['worship', 'worshipped', 'worshipping', 'adoration', 'adore', 'praise', 'reverence', 'revere'],
     'fast': ['fast', 'fasting', 'fasted'],
     'tithe': ['tithe', 'tithes', 'tithing'],
-
-    // ── Sin & struggle ──
     'sin': ['sin', 'sins', 'sinful', 'sinner', 'sinners', 'sinning', 'transgression', 'transgress', 'iniquity', 'wickedness', 'wicked'],
     'temptation': ['temptation', 'temptations', 'tempt', 'tempted', 'enticement', 'entice'],
     'suffer': ['suffer', 'suffered', 'suffering', 'sufferings', 'affliction', 'afflicted', 'tribulation', 'adversity'],
     'trial': ['trial', 'trials', 'tribulation', 'tribulations', 'hardship', 'hardships'],
     'doubt': ['doubt', 'doubts', 'doubted', 'doubting', 'uncertainty', 'uncertain', 'skeptic'],
     'weakness': ['weakness', 'weaknesses', 'weak', 'frailty', 'infirmity'],
-
-    // ── Doctrine & theology ──
     'atonement': ['atonement', 'atone', 'atoned', 'atoning', 'redemption', 'redeem', 'redeemed', 'redeemer'],
     'salvation': ['salvation', 'saved', 'exaltation', 'exalted', 'eternal life'],
     'resurrection': ['resurrection', 'resurrected', 'risen', 'rise again'],
@@ -209,14 +527,10 @@ const SYNONYMS = {
     'testimony': ['testimony', 'testimonies', 'testify', 'testifying', 'witness', 'bear witness'],
     'grace': ['grace', 'gracious', 'graciously'],
     'eternal': ['eternal', 'eternity', 'everlasting', 'forever', 'immortal', 'immortality'],
-
-    // ── God & divine ──
     'heavenly mother': ['heavenly mother', 'mother in heaven', 'heavenly parents', 'divine mother'],
     'heavenly father': ['heavenly father', 'father in heaven', 'god the father'],
     'jesus': ['jesus', 'christ', 'savior', 'redeemer', 'messiah', 'lord'],
     'holy ghost': ['holy ghost', 'holy spirit', 'comforter', 'spirit of god'],
-
-    // ── Social topics ──
     'certainty': ['i know', 'i testify', 'i bear testimony', 'i bear witness', 'i declare', 'i witness', 'i am certain', 'this is true', 'god lives', 'christ lives', 'i so testify', 'the church is true', 'the gospel is true'],
     'hedging': ['perhaps', 'maybe', 'might be', 'possibly', 'it seems', 'it appears', 'i wonder', 'i would suggest', 'in my opinion', 'i suppose'],
     'deference': ['i am grateful', 'i am humbled', 'i feel inadequate', 'who am i to', 'bear with me', 'forgive me if', 'what a privilege', 'what an honor', 'unworthy'],
@@ -232,24 +546,13 @@ const SYNONYMS = {
 function getSearchTerms(query) {
     const useSynonyms = document.getElementById('synonymToggle').checked;
     if (!useSynonyms) return [query];
-
-    // Check if query matches a synonym group key
     const key = query.trim();
     if (SYNONYMS[key]) return SYNONYMS[key];
-
-    // Check if query is IN any synonym group
-    for (const [k, syns] of Object.entries(SYNONYMS)) {
-        if (syns.includes(key)) return syns;
-    }
-
-    // No synonyms found, just use the query
+    for (const [k, syns] of Object.entries(SYNONYMS)) { if (syns.includes(key)) return syns; }
     return [key];
 }
 
-// Word-boundary matching: "mother" matches "mother" but NOT "grandmother" or "mothers"
-// For phrases like "heavenly mother" it matches the exact phrase with word boundaries
 function countIn(text, q) {
-    // Escape regex special chars in the query
     const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const re = new RegExp('\\b' + escaped + '\\b', 'gi');
     const matches = text.match(re);
@@ -272,16 +575,8 @@ function doSearch() {
     const rawQuery = document.getElementById('searchInput').value.trim().toLowerCase();
     if (!rawQuery) return;
     const terms = getSearchTerms(rawQuery);
-    const query = rawQuery; // keep for display
+    function countTerms(text) { let total=0; for(const term of terms) total+=countIn(text,term); return total; }
 
-    // Count function that checks ALL synonym terms
-    function countTerms(text) {
-        let total = 0;
-        for (const term of terms) total += countIn(text, term);
-        return total;
-    }
-
-    // Filter by session type first, then gender
     let filtered = talks;
     if (sessionType === 'general') filtered = filtered.filter(t => t.st === 'g');
     if (sessionType === 'women') filtered = filtered.filter(t => t.st === 'w');
@@ -289,94 +584,65 @@ function doSearch() {
     if (gender === 'women') filtered = filtered.filter(t => t.g === 'f');
     if (gender === 'men') filtered = filtered.filter(t => t.g === 'm');
 
-    const maxYear = Math.max(...filtered.map(t => t.y));
-
-    // Build buckets based on time mode
-    let buckets = []; // each: { label, talks: [...] }
-
+    const mx = Math.max(...filtered.map(t => t.y));
+    let buckets = [];
     if (timeMode === 'session') {
-        for (let y = minYear; y <= maxYear; y++) {
-            for (const s of ['A', 'O']) {
-                const bt = filtered.filter(t => t.y === y && t.s === s);
-                if (bt.length > 0) buckets.push({ label: `${y} ${s==='A'?'Apr':'Oct'}`, talks: bt });
-            }
+        for (let y = minYear; y <= mx; y++) for (const s of ['A','O']) {
+            const bt = filtered.filter(t => t.y===y && t.s===s);
+            if (bt.length) buckets.push({ label:`${y} ${s==='A'?'Apr':'Oct'}`, talks:bt });
         }
     } else if (timeMode === 'decade') {
-        for (let d = Math.floor(minYear/10)*10; d <= maxYear; d += 10) {
+        for (let d = Math.floor(minYear/10)*10; d <= mx; d += 10) {
             const bt = filtered.filter(t => t.y >= d && t.y < d+10);
-            if (bt.length > 0) buckets.push({ label: `${d}s`, talks: bt });
+            if (bt.length) buckets.push({ label:`${d}s`, talks:bt });
         }
     } else {
-        for (let y = minYear; y <= maxYear; y++) {
-            const bt = filtered.filter(t => t.y === y);
-            if (bt.length > 0) buckets.push({ label: y, talks: bt });
+        for (let y = minYear; y <= mx; y++) {
+            const bt = filtered.filter(t => t.y===y);
+            if (bt.length) buckets.push({ label:y, talks:bt });
         }
     }
 
-    // Compute stats per bucket
     const data = buckets.map(b => {
-        let cnt = 0, wds = 0, talksWithWord = 0;
-        b.talks.forEach(t => {
-            const c = countTerms(t.t);
-            cnt += c;
-            wds += t.w;
-            if (c > 0) talksWithWord++;
-        });
-        return {
-            label: b.label,
-            count: cnt,
-            words: wds,
-            numTalks: b.talks.length,
-            talksWithWord,
-            rate: wds > 0 ? cnt/wds*10000 : 0,         // per 10k words
-            pct: b.talks.length > 0 ? talksWithWord/b.talks.length*100 : 0,  // % of talks
-            avg: b.talks.length > 0 ? cnt/b.talks.length : 0,  // per talk average
-        };
+        let cnt=0, wds=0, twW=0;
+        b.talks.forEach(t => { const c=countTerms(t.t); cnt+=c; wds+=t.w; if(c>0)twW++; });
+        return { label:b.label, count:cnt, words:wds, numTalks:b.talks.length, talksWithWord:twW,
+                 rate: wds>0?cnt/wds*10000:0, pct: b.talks.length>0?twW/b.talks.length*100:0,
+                 avg: b.talks.length>0?cnt/b.talks.length:0 };
     });
 
-    // Pick the right value for chart
-    const valKey = metric === 'rate' ? 'rate' : metric === 'raw' ? 'count' : metric === 'pct' ? 'pct' : 'avg';
-    const yLabel = metric === 'rate' ? 'Per 10,000 words'
-                 : metric === 'raw' ? 'Raw count'
-                 : metric === 'pct' ? '% of talks containing word'
-                 : 'Avg occurrences per talk';
+    const valKey = metric==='rate'?'rate':metric==='raw'?'count':metric==='pct'?'pct':'avg';
+    const yLabel = metric==='rate'?'Per 10,000 words':metric==='raw'?'Raw count':metric==='pct'?'% of talks containing word':'Avg occurrences per talk';
 
-    // Gender stats (within current session filter)
-    let sessionFiltered = talks;
-    if (sessionType === 'general') sessionFiltered = sessionFiltered.filter(t => t.st === 'g');
-    if (sessionType === 'women') sessionFiltered = sessionFiltered.filter(t => t.st === 'w');
-    if (sessionType === 'priesthood') sessionFiltered = sessionFiltered.filter(t => t.st === 'p');
-    let wCnt=0, wWds=0, mCnt=0, mWds=0, wTalks=0, mTalks=0, wWith=0, mWith=0;
-    sessionFiltered.filter(t => t.g === 'f').forEach(t => { const c=countIn(t.t,query); wCnt+=c; wWds+=t.w; wTalks++; if(c>0)wWith++; });
-    sessionFiltered.filter(t => t.g === 'm').forEach(t => { const c=countIn(t.t,query); mCnt+=c; mWds+=t.w; mTalks++; if(c>0)mWith++; });
-    const wRate = wWds>0 ? (wCnt/wWds*10000).toFixed(2) : '0';
-    const mRate = mWds>0 ? (mCnt/mWds*10000).toFixed(2) : '0';
-    const wPct = (wWith/wTalks*100).toFixed(1);
-    const mPct = (mWith/mTalks*100).toFixed(1);
-
+    let sf = talks;
+    if (sessionType === 'general') sf = sf.filter(t => t.st === 'g');
+    if (sessionType === 'women') sf = sf.filter(t => t.st === 'w');
+    if (sessionType === 'priesthood') sf = sf.filter(t => t.st === 'p');
+    let wCnt=0,wWds=0,mCnt=0,mWds=0,wTalks=0,mTalks=0,wWith=0,mWith=0;
+    sf.filter(t=>t.g==='f').forEach(t=>{const c=countTerms(t.t);wCnt+=c;wWds+=t.w;wTalks++;if(c>0)wWith++;});
+    sf.filter(t=>t.g==='m').forEach(t=>{const c=countTerms(t.t);mCnt+=c;mWds+=t.w;mTalks++;if(c>0)mWith++;});
+    const wRate = wWds>0?(wCnt/wWds*10000).toFixed(2):'0';
+    const mRate = mWds>0?(mCnt/mWds*10000).toFixed(2):'0';
+    const wPct = wTalks>0?(wWith/wTalks*100).toFixed(1):'0';
+    const mPct = mTalks>0?(mWith/mTalks*100).toFixed(1):'0';
     const test = zTest(wCnt, wWds, mCnt, mWds);
     const sig = test.p < 0.05;
     const pDisp = test.p < 0.001 ? '< 0.001' : test.p.toFixed(3);
 
-    // Chart
     const vals = data.map(d => d[valKey]);
-    const termLabel = terms.length > 1 ? `${terms.join(' + ')}` : `"${rawQuery}"`;
+    const termLabel = terms.length > 1 ? terms.join(' + ') : `"${rawQuery}"`;
     const lbl = `${termLabel} — ${yLabel.toLowerCase()}`;
-    const clr = gender==='women' ? '#B35488' : gender==='men' ? '#4A7FA5' : '#8C7058';
+    const clr = gender==='women'?'#B35488':gender==='men'?'#4A7FA5':'#8C7058';
 
     if (chart) chart.destroy();
     chart = new Chart(document.getElementById('chart'), {
-        type: 'line',
-        data: { labels: data.map(d=>d.label), datasets: [{ label: lbl, data: vals, borderColor: clr, backgroundColor: clr+'20', borderWidth: 1.5, pointRadius: timeMode==='session'?1.5 : timeMode==='decade'?4 : 2.5, pointBackgroundColor: clr, fill: true, tension: 0.1 }] },
-        options: {
-            responsive: true,
-            plugins: { legend: { display:true, position:'top' }, tooltip: { callbacks: { afterLabel: ctx => { const d=data[ctx.dataIndex]; const synNote = terms.length > 1 ? `\nSearching: ${terms.join(', ')}` : '';
-return `${d.count} occurrences in ${d.numTalks} talks\n${d.talksWithWord} talks contain it (${d.pct.toFixed(1)}%)\n${d.words.toLocaleString()} total words${synNote}`; } } } },
-            scales: { y: { beginAtZero:true, title: { display:true, text: yLabel } }, x: { title: { display:true, text: timeMode==='session'?'Session':timeMode==='decade'?'Decade':'Year' }, ticks: { maxTicksLimit: timeMode==='session'?20:55 } } }
-        }
+        type:'line',
+        data:{ labels:data.map(d=>d.label), datasets:[{ label:lbl, data:vals, borderColor:clr, backgroundColor:clr+'20', borderWidth:1.5, pointRadius: timeMode==='session'?1.5 : timeMode==='decade'?4 : 2.5, pointBackgroundColor:clr, fill:true, tension:0.1 }] },
+        options:{ responsive:true,
+            plugins:{ legend:{display:true,position:'top'}, tooltip:{ callbacks:{ afterLabel: ctx=>{ const d=data[ctx.dataIndex]; const sn = terms.length>1?`\nSearching: ${terms.join(', ')}`:''; return `${d.count} occurrences in ${d.numTalks} talks\n${d.talksWithWord} talks contain it (${d.pct.toFixed(1)}%)\n${d.words.toLocaleString()} total words${sn}`;}}}},
+            scales:{ y:{beginAtZero:true, title:{display:true,text:yLabel}}, x:{title:{display:true,text: timeMode==='session'?'Session':timeMode==='decade'?'Decade':'Year'}, ticks:{maxTicksLimit: timeMode==='session'?20:55}}}}
     });
 
-    // Stats
     const total = data.reduce((s,d) => s+d.count, 0);
     const sigClr = sig ? '#27864A' : '#D4890A';
     const sigTxt = sig ? 'Yes — statistically significant' : 'No — not significant';
@@ -393,6 +659,440 @@ return `${d.count} occurrences in ${d.numTalks} talks\n${d.talksWithWord} talks 
         </div>`;
 }
 
+// ═══════════════════════════════════════════════════════════
+//                  TAB 2: TALK LENGTH
+// ═══════════════════════════════════════════════════════════
+let lenGender = 'split', lenSession = 'all', lenYearMin = 1971, lenYearMax = 2025;
+let lenChart = null;
+
+function pickLen(btn, group) {
+    btn.closest('.bg').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (group === 'gender') lenGender = btn.dataset.v;
+    if (group === 'session') lenSession = btn.dataset.v;
+    renderLength();
+}
+
+function initLength() {
+    // Default view: split W/M
+    document.querySelector('#lenGenderGroup button.active').classList.remove('active');
+    document.querySelector('#lenGenderGroup button[data-v="split"]').classList.add('active');
+
+    const mn = document.getElementById('lenYearMin');
+    const mx = document.getElementById('lenYearMax');
+    mn.min = mx.min = minYear; mn.max = mx.max = maxYear;
+    mn.value = minYear; mx.value = maxYear;
+    const update = () => {
+        let a = +mn.value, b = +mx.value;
+        if (a > b) { if (this===mn) b=a; else a=b; mn.value=a; mx.value=b; }
+        lenYearMin = a; lenYearMax = b;
+        document.getElementById('lenYearLabel').textContent = `${a}–${b}`;
+        renderLength();
+    };
+    mn.addEventListener('input', update);
+    mx.addEventListener('input', update);
+    renderLength();
+}
+
+function renderLength() {
+    let filtered = talks.filter(t => t.y >= lenYearMin && t.y <= lenYearMax);
+    if (lenSession === 'general') filtered = filtered.filter(t => t.st === 'g');
+    if (lenSession === 'women') filtered = filtered.filter(t => t.st === 'w');
+    if (lenSession === 'priesthood') filtered = filtered.filter(t => t.st === 'p');
+
+    const women = filtered.filter(t => t.g === 'f');
+    const men = filtered.filter(t => t.g === 'm');
+    const avg = arr => arr.length ? arr.reduce((s,t)=>s+t.w,0)/arr.length : 0;
+    const med = arr => { if (!arr.length) return 0; const s = arr.map(t=>t.w).sort((a,b)=>a-b); return s[Math.floor(s.length/2)]; };
+
+    // Bin into 500-word buckets, up to 8000
+    const binSize = 500, maxBin = 8000;
+    const nBins = maxBin / binSize + 1;
+    const binLabel = i => i === nBins-1 ? `${maxBin}+` : `${i*binSize}–${(i+1)*binSize}`;
+    const binFor = w => Math.min(Math.floor(w / binSize), nBins-1);
+    const hist = arr => { const h = new Array(nBins).fill(0); arr.forEach(t => h[binFor(t.w)]++); return h; };
+
+    const labels = Array.from({length:nBins}, (_,i) => binLabel(i));
+    let datasets = [];
+    if (lenGender === 'both') {
+        datasets = [{ label:`All talks (n=${filtered.length})`, data: hist(filtered), backgroundColor:'#8C705888', borderColor:'#8C7058', borderWidth:1 }];
+    } else if (lenGender === 'women') {
+        datasets = [{ label:`Women (n=${women.length})`, data: hist(women), backgroundColor:'#B3548888', borderColor:'#B35488', borderWidth:1 }];
+    } else if (lenGender === 'men') {
+        datasets = [{ label:`Men (n=${men.length})`, data: hist(men), backgroundColor:'#4A7FA588', borderColor:'#4A7FA5', borderWidth:1 }];
+    } else { // split
+        datasets = [
+            { label:`Women (n=${women.length})`, data: hist(women), backgroundColor:'#B3548888', borderColor:'#B35488', borderWidth:1 },
+            { label:`Men (n=${men.length})`, data: hist(men), backgroundColor:'#4A7FA588', borderColor:'#4A7FA5', borderWidth:1 },
+        ];
+    }
+
+    if (lenChart) lenChart.destroy();
+    lenChart = new Chart(document.getElementById('lenChart'), {
+        type:'bar',
+        data:{ labels, datasets },
+        options:{ responsive:true,
+            plugins:{ legend:{display:true,position:'top'} },
+            scales:{ y:{beginAtZero:true, title:{display:true,text:'Number of talks'}}, x:{title:{display:true,text:'Word count'}}}}
+    });
+
+    // Headline + stats
+    const wAvg = avg(women), mAvg = avg(men), wMed = med(women), mMed = med(men);
+    const diff = Math.round(mAvg - wAvg);
+    let hl;
+    if (lenGender === 'women') hl = `Women's talks average <em>${Math.round(wAvg).toLocaleString()}</em> words (median ${Math.round(wMed).toLocaleString()}).`;
+    else if (lenGender === 'men') hl = `Men's talks average <em>${Math.round(mAvg).toLocaleString()}</em> words (median ${Math.round(mMed).toLocaleString()}).`;
+    else if (lenGender === 'both') hl = `All talks average <em>${Math.round(avg(filtered)).toLocaleString()}</em> words.`;
+    else hl = diff > 0
+        ? `Men's talks are on average <em>${diff.toLocaleString()} words longer</em> than women's.`
+        : diff < 0
+        ? `Women's talks are on average <em>${Math.abs(diff).toLocaleString()} words longer</em> than men's.`
+        : `Women and men give talks of nearly identical length on average.`;
+    document.getElementById('lengthHeadline').innerHTML = hl;
+
+    const sp = document.getElementById('lenStats');
+    sp.innerHTML = `
+        <div class="stat-item"><div class="stat-num">${filtered.length.toLocaleString()}</div><div class="stat-label">Talks in selection</div></div>
+        <div class="stat-item"><div class="stat-num f">${Math.round(wAvg).toLocaleString()}</div><div class="stat-label">Women avg (median ${Math.round(wMed).toLocaleString()})</div></div>
+        <div class="stat-item"><div class="stat-num m">${Math.round(mAvg).toLocaleString()}</div><div class="stat-label">Men avg (median ${Math.round(mMed).toLocaleString()})</div></div>
+        <div class="stat-item"><div class="stat-num">${Math.round(Math.max(...filtered.map(t=>t.w))).toLocaleString()}</div><div class="stat-label">Longest talk</div></div>
+    `;
+}
+
+// ═══════════════════════════════════════════════════════════
+//                  TAB 3: WHO SPEAKS
+// ═══════════════════════════════════════════════════════════
+let whoGender = 'both', whoSelected = null, whoChart = null;
+let speakerIndex = null; // { name: { talks:[...], gender:'f'|'m' } }
+
+function pickWho(btn) {
+    btn.closest('.bg').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    whoGender = btn.dataset.v;
+    renderSpeakerList();
+}
+
+function initWho() {
+    speakerIndex = {};
+    talks.forEach(t => {
+        if (!speakerIndex[t.sp]) speakerIndex[t.sp] = { talks:[], gender:t.g };
+        speakerIndex[t.sp].talks.push(t);
+    });
+    // Top 10 pct
+    const sorted = Object.entries(speakerIndex).sort((a,b) => b[1].talks.length - a[1].talks.length);
+    const top10 = sorted.slice(0, 10).reduce((s, [_, v]) => s + v.talks.length, 0);
+    document.getElementById('whoTop10Pct').textContent = `${(top10 / talks.length * 100).toFixed(1)}%`;
+
+    document.getElementById('whoFilter').addEventListener('input', renderSpeakerList);
+    renderSpeakerList();
+}
+
+function renderSpeakerList() {
+    const filt = document.getElementById('whoFilter').value.trim().toLowerCase();
+    const list = document.getElementById('speakerList');
+    let entries = Object.entries(speakerIndex);
+    if (whoGender === 'women') entries = entries.filter(([_,v]) => v.gender === 'f');
+    if (whoGender === 'men') entries = entries.filter(([_,v]) => v.gender === 'm');
+    if (filt) entries = entries.filter(([n,_]) => n.toLowerCase().includes(filt));
+    entries.sort((a,b) => b[1].talks.length - a[1].talks.length);
+
+    list.innerHTML = entries.slice(0, 300).map(([name, v]) => `
+        <div class="speaker-item ${whoSelected===name?'selected':''}" onclick="selectSpeaker(${JSON.stringify(name).replace(/"/g,'&quot;')})">
+            <span><span class="${v.gender==='f'?'f-dot':'m-dot'}">${v.gender==='f'?'♀':'♂'}</span> ${name}</span>
+            <span class="count">${v.talks.length}</span>
+        </div>
+    `).join('');
+}
+
+function selectSpeaker(name) {
+    whoSelected = name;
+    renderSpeakerList();
+    const v = speakerIndex[name];
+    const years = v.talks.map(t => t.y).sort((a,b) => a-b);
+    const firstYear = years[0], lastYear = years[years.length-1];
+    const yearCounts = {};
+    for (let y = firstYear; y <= lastYear; y++) yearCounts[y] = 0;
+    v.talks.forEach(t => yearCounts[t.y] = (yearCounts[t.y] || 0) + 1);
+    const labels = Object.keys(yearCounts);
+    const counts = Object.values(yearCounts);
+    const clr = v.gender === 'f' ? '#B35488' : '#4A7FA5';
+
+    if (whoChart) whoChart.destroy();
+    whoChart = new Chart(document.getElementById('whoChart'), {
+        type:'bar',
+        data:{ labels, datasets:[{ label:`${name} — talks per year`, data:counts, backgroundColor:clr, borderColor:clr, borderWidth:1 }] },
+        options:{ responsive:true,
+            plugins:{ legend:{display:true,position:'top'} },
+            scales:{ y:{beginAtZero:true, ticks:{stepSize:1}, title:{display:true,text:'Talks'}}, x:{title:{display:true,text:'Year'}}}}
+    });
+
+    const totalWords = v.talks.reduce((s,t)=>s+t.w, 0);
+    const avgWords = Math.round(totalWords / v.talks.length);
+    const career = lastYear - firstYear + 1;
+    const sp = document.getElementById('whoStats');
+    sp.style.display = 'grid';
+    sp.innerHTML = `
+        <div class="stat-item"><div class="stat-num ${v.gender==='f'?'f':'m'}">${v.talks.length}</div><div class="stat-label">Total talks</div></div>
+        <div class="stat-item"><div class="stat-num">${firstYear}–${lastYear}</div><div class="stat-label">Years active (${career})</div></div>
+        <div class="stat-item"><div class="stat-num">${avgWords.toLocaleString()}</div><div class="stat-label">Avg words / talk</div></div>
+        <div class="stat-item"><div class="stat-num">${totalWords.toLocaleString()}</div><div class="stat-label">Total words</div></div>
+    `;
+}
+
+// ═══════════════════════════════════════════════════════════
+//                  TAB 4: SURPRISING WORDS
+// ═══════════════════════════════════════════════════════════
+let surpMode = 'gender';
+
+function pickSurp(btn) {
+    btn.closest('.bg').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    surpMode = btn.dataset.v;
+    renderSurp();
+}
+
+function initSurp() { renderSurp(); }
+
+function renderSurp() {
+    const list = document.getElementById('surpList');
+    const sub = document.getElementById('surpSubtitle');
+    if (surpMode === 'gender') {
+        sub.textContent = 'Top 50 words where women and men differ most (per 10k words). Pink = women say it more; blue = men say it more.';
+        const data = surprising.gender_top.slice(0, 50);
+        const maxAbs = Math.max(...data.map(d => Math.abs(d.diff)));
+        list.innerHTML = data.map(d => {
+            const pink = d.diff > 0;
+            const bar = Math.abs(d.diff) / maxAbs * 200;
+            const arrow = pink ? '♀' : '♂';
+            const clr = pink ? 'f' : 'm';
+            return `<div class="surp-item" onclick="jumpToWord(${JSON.stringify(d.word).replace(/"/g,'&quot;')})">
+                <div><span class="surp-word">${d.word}</span> <span class="${clr==='f'?'f-dot':'m-dot'}" style="font-size:0.85rem;">${arrow}</span></div>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <div class="surp-bar" style="justify-content:${pink?'flex-end':'flex-start'};width:${bar}px;">
+                        <div class="${pink?'surp-bar-w':'surp-bar-m'}" style="width:100%;"></div>
+                    </div>
+                    <span class="surp-num">W ${d.women_rate} / M ${d.men_rate}</span>
+                </div>
+            </div>`;
+        }).join('');
+    } else {
+        sub.textContent = 'Top 50 words whose usage has changed the most over time. Green = rising; amber = falling.';
+        const data = surprising.trend_top.slice(0, 50);
+        const maxAbs = Math.max(...data.map(d => Math.abs(d.slope)));
+        list.innerHTML = data.map(d => {
+            const rising = d.slope > 0;
+            const bar = Math.abs(d.slope) / maxAbs * 200;
+            const arrow = rising ? '↑' : '↓';
+            const clr = rising ? 'var(--green)' : 'var(--yellow)';
+            return `<div class="surp-item" onclick="jumpToWord(${JSON.stringify(d.word).replace(/"/g,'&quot;')})">
+                <div><span class="surp-word">${d.word}</span> <span style="color:${clr};font-weight:600;">${arrow}</span></div>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <div class="surp-bar" style="width:${bar}px;"><div style="width:100%;background:${clr};height:100%;"></div></div>
+                    <span class="surp-num">early ${d.early_rate} → late ${d.late_rate}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+}
+
+function jumpToWord(word) {
+    // Switch to word tab and run the search
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab[data-tab="word"]').classList.add('active');
+    document.getElementById('panel-word').classList.add('active');
+    document.getElementById('searchInput').value = word;
+    doSearch();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════════════════════
+//                  TAB: TALK FREQUENCY
+// ═══════════════════════════════════════════════════════════
+let freqView = 'counts', freqBreakdown = 'split', freqGroupBy = 'year', freqSession = 'all', freqChart = null;
+
+function pickFreq(btn, group) {
+    btn.closest('.bg').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (group === 'view') freqView = btn.dataset.v;
+    if (group === 'breakdown') freqBreakdown = btn.dataset.v;
+    if (group === 'groupby') freqGroupBy = btn.dataset.v;
+    if (group === 'session') freqSession = btn.dataset.v;
+    renderFreq();
+}
+
+function initFreq() { renderFreq(); }
+
+function renderFreq() {
+    let filtered = talks;
+    if (freqSession === 'general') filtered = filtered.filter(t => t.st === 'g');
+    if (freqSession === 'women') filtered = filtered.filter(t => t.st === 'w');
+    if (freqSession === 'priesthood') filtered = filtered.filter(t => t.st === 'p');
+
+    // Build buckets (year or decade)
+    const buckets = [];
+    if (freqGroupBy === 'decade') {
+        const startDec = Math.floor(minYear/10)*10;
+        for (let d = startDec; d <= maxYear; d += 10) {
+            buckets.push({ label:`${d}s`, match: t => t.y >= d && t.y < d+10 });
+        }
+    } else {
+        for (let y = minYear; y <= maxYear; y++) {
+            buckets.push({ label:y, match: t => t.y === y });
+        }
+    }
+
+    const labels = buckets.map(b => b.label);
+    const womenByBucket = buckets.map(b => filtered.filter(t => b.match(t) && t.g === 'f').length);
+    const menByBucket   = buckets.map(b => filtered.filter(t => b.match(t) && t.g === 'm').length);
+    const pctByBucket   = buckets.map((b, i) => {
+        const t = womenByBucket[i] + menByBucket[i];
+        return t > 0 ? (womenByBucket[i] / t * 100) : null;
+    });
+
+    // Build datasets based on view + breakdown
+    const datasets = [];
+    const showCounts = freqView === 'counts' || freqView === 'both';
+    const showPct    = freqView === 'pct' || freqView === 'both';
+
+    if (showCounts) {
+        if (freqBreakdown === 'split') {
+            datasets.push({ type:'bar', label:'Women', data: womenByBucket, backgroundColor:'#B35488CC', stack:'s', yAxisID:'y' });
+            datasets.push({ type:'bar', label:'Men',   data: menByBucket,   backgroundColor:'#4A7FA5CC', stack:'s', yAxisID:'y' });
+        } else if (freqBreakdown === 'total') {
+            const total = womenByBucket.map((w, i) => w + menByBucket[i]);
+            datasets.push({ type:'bar', label:'All talks', data: total, backgroundColor:'#8C7058CC', yAxisID:'y' });
+        } else if (freqBreakdown === 'women') {
+            datasets.push({ type:'bar', label:'Women', data: womenByBucket, backgroundColor:'#B35488CC', yAxisID:'y' });
+        } else {
+            datasets.push({ type:'bar', label:'Men', data: menByBucket, backgroundColor:'#4A7FA5CC', yAxisID:'y' });
+        }
+    }
+    if (showPct) {
+        datasets.push({ type:'line', label:'% women', data: pctByBucket, borderColor:'#B35488', backgroundColor:'transparent', borderWidth:2, pointRadius:2.5, pointBackgroundColor:'#B35488', yAxisID: showCounts ? 'y2' : 'y', tension:0.2 });
+    }
+
+    // Scales
+    const scales = { x: { stacked: freqBreakdown === 'split' && showCounts, ticks: { maxTicksLimit: freqGroupBy === 'decade' ? 12 : 30 } } };
+    if (showCounts && showPct) {
+        scales.y  = { beginAtZero:true, stacked: freqBreakdown === 'split', title:{display:true,text:'Talks'}, position:'left' };
+        scales.y2 = { beginAtZero:true, max:50, position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'% women'} };
+    } else if (showPct) {
+        scales.y = { beginAtZero:true, max:50, title:{display:true,text:'% women'} };
+    } else {
+        scales.y = { beginAtZero:true, stacked: freqBreakdown === 'split', title:{display:true,text:'Talks'} };
+    }
+
+    if (freqChart) freqChart.destroy();
+    freqChart = new Chart(document.getElementById('freqChart'), {
+        data: { labels, datasets },
+        options: { responsive:true, plugins:{ legend:{display:true,position:'top'} }, scales },
+    });
+
+    // For headline/stats use yearly resolution regardless of groupBy
+    const years = [];
+    for (let y = minYear; y <= maxYear; y++) years.push(y);
+    const womenByYear = years.map(y => filtered.filter(t => t.y === y && t.g === 'f').length);
+    const menByYear   = years.map(y => filtered.filter(t => t.y === y && t.g === 'm').length);
+    const pctByYear   = years.map((_, i) => {
+        const t = womenByYear[i] + menByYear[i];
+        return t > 0 ? (womenByYear[i] / t * 100) : null;
+    });
+
+    // Headline: % women in latest year vs earliest year with any women
+    const totalW = womenByYear.reduce((a,b)=>a+b,0);
+    const totalM = menByYear.reduce((a,b)=>a+b,0);
+    const total = totalW + totalM;
+    const overallPct = total > 0 ? (totalW / total * 100).toFixed(1) : '0';
+    const latestIdx = years.length - 1;
+    const latestPct = pctByYear[latestIdx];
+    const firstWomenYearIdx = womenByYear.findIndex(c => c > 0);
+    const firstWomenYear = firstWomenYearIdx >= 0 ? years[firstWomenYearIdx] : null;
+    let hl = `Women gave <em>${overallPct}%</em> of the ${total.toLocaleString()} talks in this view.`;
+    if (latestPct != null && firstWomenYear) {
+        hl += ` In ${years[latestIdx]}, that share was <em>${latestPct.toFixed(1)}%</em> — up from ${firstWomenYear === years[0] ? 'zero' : `first appearing in ${firstWomenYear}`}.`;
+    }
+    document.getElementById('freqHeadline').innerHTML = hl;
+
+    const peakYearIdx = pctByYear.reduce((best, v, i) => v != null && (best < 0 || v > pctByYear[best]) ? i : best, -1);
+    const sp = document.getElementById('freqStats');
+    sp.innerHTML = `
+        <div class="stat-item"><div class="stat-num">${total.toLocaleString()}</div><div class="stat-label">Total talks</div></div>
+        <div class="stat-item"><div class="stat-num f">${totalW.toLocaleString()}</div><div class="stat-label">By women (${overallPct}%)</div></div>
+        <div class="stat-item"><div class="stat-num m">${totalM.toLocaleString()}</div><div class="stat-label">By men</div></div>
+        <div class="stat-item"><div class="stat-num">${peakYearIdx>=0 ? years[peakYearIdx] : '—'}</div><div class="stat-label">Peak year for women (${peakYearIdx>=0 ? pctByYear[peakYearIdx].toFixed(1)+'%' : '—'})</div></div>
+    `;
+}
+
+// ═══════════════════════════════════════════════════════════
+//                  TAB: TOPICS
+// ═══════════════════════════════════════════════════════════
+let selectedTopic = null, topicChart = null;
+
+function initTopics() {
+    const grid = document.getElementById('topicGrid');
+    grid.innerHTML = topicsData.topics.map(t => {
+        const wPct = t.w_pct;
+        const mPct = 100 - wPct;
+        return `<div class="topic-card" data-topic="${t.name}" onclick="selectTopic('${t.name.replace(/'/g,"\\'")}')">
+            <div class="topic-card-name">${t.name}</div>
+            <div class="topic-card-count">${t.count} talks where this topic is dense</div>
+            <div class="topic-split-bar">
+                <div class="f" style="width:${wPct}%"></div>
+                <div class="m" style="width:${mPct}%"></div>
+            </div>
+            <div class="topic-split-label"><span class="f">♀ ${wPct.toFixed(1)}%</span><span class="m">♂ ${mPct.toFixed(1)}%</span></div>
+        </div>`;
+    }).join('');
+}
+
+function selectTopic(name) {
+    selectedTopic = name;
+    document.querySelectorAll('.topic-card').forEach(c => c.classList.toggle('active', c.dataset.topic === name));
+    const t = topicsData.topics.find(x => x.name === name);
+    document.getElementById('topicDetail').style.display = 'block';
+
+    // Year trend
+    const years = Object.keys(t.by_year).map(Number).sort((a,b)=>a-b);
+    const counts = years.map(y => t.by_year[y]);
+    if (topicChart) topicChart.destroy();
+    topicChart = new Chart(document.getElementById('topicChart'), {
+        type:'bar',
+        data:{ labels:years, datasets:[{ label:`"${name}" — densely-themed talks per year`, data:counts, backgroundColor:'#8C7058BB', borderColor:'#8C7058', borderWidth:1 }] },
+        options:{ responsive:true, plugins:{legend:{display:true,position:'top'}}, scales:{ y:{beginAtZero:true, ticks:{stepSize:1}, title:{display:true,text:'Talks'}}, x:{title:{display:true,text:'Year'}}}}
+    });
+
+    // Compare to corpus baseline (6% women overall)
+    const corpusWomenPct = (talks.filter(t => t.g === 'f').length / talks.length * 100);
+    const skew = t.w_pct - corpusWomenPct;
+    const skewTxt = skew > 5 ? `over-represented by women (+${skew.toFixed(1)} pts vs corpus)` : skew < -5 ? `under-represented by women (${skew.toFixed(1)} pts vs corpus)` : `roughly matches the corpus baseline`;
+
+    const sp = document.getElementById('topicStats');
+    sp.style.display = 'grid';
+    sp.innerHTML = `
+        <div class="stat-item"><div class="stat-num">${t.count}</div><div class="stat-label">Talks where topic is dense</div></div>
+        <div class="stat-item"><div class="stat-num f">${t.w_count}</div><div class="stat-label">By women (${t.w_pct}%)</div></div>
+        <div class="stat-item"><div class="stat-num m">${t.m_count}</div><div class="stat-label">By men</div></div>
+        <div class="stat-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:0.75rem;margin-top:0.25rem;"><div class="stat-num" style="font-size:0.95rem;">${skewTxt}</div><div class="stat-label">Gender skew (corpus avg: ${corpusWomenPct.toFixed(1)}% women)</div></div>
+    `;
+
+    // Sample talks
+    document.getElementById('topicSampleHeader').textContent = `Sample talks (spread across ${years[0]}–${years[years.length-1]})`;
+    document.getElementById('topicSampleList').innerHTML = t.sample.map(s => `
+        <div class="sample-row">
+            <div class="sample-year">${s.y} ${s.s}</div>
+            <div>
+                <div class="sample-title">${s.title}</div>
+                <div class="sample-speaker"><span class="${s.g==='f'?'f':'m'}">${s.g==='f'?'♀':'♂'}</span> ${s.sp}</div>
+            </div>
+            <div class="sample-speaker">${s.w.toLocaleString()} words</div>
+            <div class="sample-rate">${s.rate}/10k</div>
+        </div>
+    `).join('');
+    document.getElementById('topicDetail').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// GO
 loadData();
 </script>
 </body>
