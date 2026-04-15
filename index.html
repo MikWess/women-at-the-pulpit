@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Explorer — Women at the Pulpit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg:#FAF6F0; --card:#FFFFFF; --text:#2C2420; --muted:#6B5D52; --border:#E0D6CC; --accent:#8C7058; --female:#B35488; --male:#4A7FA5; --green:#27864A; --yellow:#D4890A; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'IBM Plex Sans',sans-serif; background:var(--bg); color:var(--text); padding:2rem; max-width:960px; margin:0 auto; }
+        h1 { font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:400; font-style:italic; margin-bottom:0.25rem; }
+        .subtitle { color:var(--muted); font-size:0.85rem; margin-bottom:1.5rem; }
+        .controls { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.25rem; margin-bottom:1.5rem; display:flex; gap:1rem; align-items:end; flex-wrap:wrap; }
+        .control-group { display:flex; flex-direction:column; gap:0.3rem; }
+        .control-group label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); font-weight:500; }
+        input[type="text"] { font-family:'IBM Plex Mono',monospace; font-size:0.95rem; padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:5px; width:260px; background:var(--bg); }
+        input:focus { outline:none; border-color:var(--accent); }
+        .bg { display:flex; border:1px solid var(--border); border-radius:5px; overflow:hidden; }
+        .bg button { padding:0.4rem 0.65rem; font-size:0.74rem; font-family:inherit; border:none; background:var(--card); cursor:pointer; border-right:1px solid var(--border); transition:all 0.15s; white-space:nowrap; }
+        .bg button:last-child { border-right:none; }
+        .bg button.active { background:var(--accent); color:white; font-weight:500; }
+        .bg.gender button.active[data-v="both"] { background:var(--accent); }
+        .bg.gender button.active[data-v="women"] { background:var(--female); }
+        .bg.gender button.active[data-v="men"] { background:var(--male); }
+        .search-btn { padding:0.5rem 1.25rem; background:var(--accent); color:white; border:none; border-radius:5px; font-family:inherit; font-size:0.88rem; cursor:pointer; font-weight:500; }
+        .search-btn:hover { background:#7A6048; }
+        .chart-container { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.25rem; margin-bottom:1rem; }
+        .stats { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.25rem; font-size:0.85rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0.75rem; }
+        .stat-item { text-align:center; }
+        .stat-num { font-family:'IBM Plex Mono',monospace; font-size:1.3rem; font-weight:500; }
+        .stat-label { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; }
+        .stat-num.f { color:var(--female); }
+        .stat-num.m { color:var(--male); }
+        #status { font-size:0.8rem; color:var(--muted); margin-bottom:1rem; }
+        .help { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; font-size:0.82rem; color:var(--muted); line-height:1.6; }
+        .help strong { color:var(--text); }
+        @media (max-width:640px) { body{padding:1rem;} input[type="text"]{width:100%;} .controls{flex-direction:column;align-items:stretch;} }
+    </style>
+</head>
+<body>
+
+<h1>Word Explorer</h1>
+<p class="subtitle">Search any word or phrase across 4,001 General Conference talks (1971–2025).</p>
+<div id="status"><em>Loading database...</em></div>
+
+<div class="help">
+    <strong>Metric modes explained:</strong><br>
+    <strong>Per 10k words</strong> — frequency normalized by total words spoken. "How dense is this word in speech?" Fair comparison across groups of different sizes.<br>
+    <strong>Raw count</strong> — just how many times the word appears. Bigger groups say everything more, so this is best for seeing absolute volume.<br>
+    <strong>% of talks</strong> — what percentage of talks contain this word at least once. "How widespread is this topic?" A word could appear 50 times in 1 talk or 1 time in 50 talks — this tells you which.<br>
+    <strong>Per talk avg</strong> — average number of times the word appears per talk. "When someone DOES talk, how much do they say it?"
+</div>
+
+<div class="controls">
+    <div class="control-group" style="flex:1;">
+        <label>Word or phrase</label>
+        <input type="text" id="searchInput" placeholder='e.g. "mother"' disabled>
+    </div>
+    <div class="control-group" style="flex:1;">
+        <label>Compare with (optional)</label>
+        <input type="text" id="searchInput2" placeholder='e.g. "father"' disabled>
+    </div>
+    <div class="control-group">
+        <label>Speakers</label>
+        <div class="bg gender" id="genderGroup">
+            <button class="active" data-v="both" onclick="pick(this,'gender')">Both</button>
+            <button data-v="women" onclick="pick(this,'gender')">Women</button>
+            <button data-v="men" onclick="pick(this,'gender')">Men</button>
+        </div>
+    </div>
+    <div class="control-group">
+        <label>Metric</label>
+        <div class="bg" id="metricGroup">
+            <button class="active" data-v="rate" onclick="pick(this,'metric')">Per 10k</button>
+            <button data-v="raw" onclick="pick(this,'metric')">Raw count</button>
+            <button data-v="pct" onclick="pick(this,'metric')">% of talks</button>
+            <button data-v="avg" onclick="pick(this,'metric')">Per talk avg</button>
+        </div>
+    </div>
+    <div class="control-group">
+        <label>Group by</label>
+        <div class="bg" id="timeGroup">
+            <button class="active" data-v="year" onclick="pick(this,'time')">Year</button>
+            <button data-v="session" onclick="pick(this,'time')">Session</button>
+            <button data-v="decade" onclick="pick(this,'time')">Decade</button>
+        </div>
+    </div>
+    <div class="control-group">
+        <label>Session</label>
+        <div class="bg" id="sessionGroup">
+            <button class="active" data-v="all" onclick="pick(this,'session')">All</button>
+            <button data-v="general" onclick="pick(this,'session')">General</button>
+            <button data-v="women" onclick="pick(this,'session')">Women's</button>
+            <button data-v="priesthood" onclick="pick(this,'session')">Priesthood</button>
+        </div>
+    </div>
+    <div class="control-group" style="justify-content:end;">
+        <label>&nbsp;</label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.82rem;text-transform:none;letter-spacing:0;color:var(--text);">
+            <input type="checkbox" id="synonymToggle" onchange="if(document.getElementById('searchInput').value)doSearch()"> + synonyms
+        </label>
+    </div>
+    <button class="search-btn" id="searchBtn" onclick="doSearch()" disabled>Search</button>
+</div>
+
+<div class="chart-container"><canvas id="chart" height="100"></canvas></div>
+<div class="stats" id="statsPanel" style="display:none;"></div>
+
+<script>
+let talks = [];
+let gender = 'both', metric = 'rate', timeMode = 'year', sessionType = 'all';
+let chart = null, minYear = 1971;
+
+async function loadData() {
+    const resp = await fetch('data/talks.json');
+    talks = await resp.json();
+    minYear = Math.min(...talks.map(t => t.y));
+    const wc = talks.filter(t => t.g === 'f').length;
+    const mc = talks.filter(t => t.g === 'm').length;
+    document.getElementById('status').textContent = `Loaded ${talks.length} talks (${wc} women, ${mc} men)`;
+    document.getElementById('searchInput').disabled = false;
+    document.getElementById('searchInput2').disabled = false;
+    document.getElementById('searchBtn').disabled = false;
+    document.getElementById('searchInput').focus();
+}
+
+function pick(btn, group) {
+    btn.closest('.bg').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (group === 'gender') gender = btn.dataset.v;
+    if (group === 'metric') metric = btn.dataset.v;
+    if (group === 'time') timeMode = btn.dataset.v;
+    if (group === 'session') sessionType = btn.dataset.v;
+    if (document.getElementById('searchInput').value) doSearch();
+}
+
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+document.getElementById('searchInput2').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+// Synonym groups — curated for conference talk context
+// Each group: type a key word, get all related forms + true synonyms
+// Built from WordNet + manual curation, filtered to words appearing 20+ times in corpus
+const SYNONYMS = {
+    // ── People & relationships ──
+    'mother': ['mother', 'mothers', 'motherhood', 'mothering', 'maternal'],
+    'father': ['father', 'fathers', 'fatherhood', 'fathering', 'paternal'],
+    'woman': ['woman', 'women', 'womanhood', 'feminine', 'femininity', 'female'],
+    'man': ['man', 'men', 'manhood', 'masculine', 'masculinity', 'male'],
+    'child': ['child', 'children', 'childhood', 'youth', 'young'],
+    'family': ['family', 'families'],
+    'marriage': ['marriage', 'marry', 'married', 'wedding', 'spouse', 'husband', 'wife'],
+    'sister': ['sister', 'sisters', 'sisterhood'],
+    'brother': ['brother', 'brothers', 'brotherhood', 'brethren'],
+
+    // ── Emotions & states ──
+    'love': ['love', 'loved', 'loves', 'loving', 'beloved', 'affection'],
+    'joy': ['joy', 'joyful', 'joyous', 'rejoice', 'rejoicing', 'happiness', 'happy', 'glad', 'gladness', 'delight'],
+    'peace': ['peace', 'peaceful', 'peacefully', 'peacemaker', 'serenity', 'calm'],
+    'hope': ['hope', 'hoped', 'hopes', 'hoping', 'hopeful'],
+    'fear': ['fear', 'fears', 'afraid', 'fearful', 'dread', 'anxiety', 'anxious', 'worry', 'worried'],
+    'anger': ['anger', 'angry', 'wrath', 'fury', 'rage', 'indignation'],
+    'sorrow': ['sorrow', 'sorrowful', 'grief', 'grieve', 'grieving', 'mourning', 'mourn', 'sadness', 'sad'],
+    'grateful': ['grateful', 'gratitude', 'thankful', 'thankfulness', 'appreciate', 'appreciation'],
+    'pride': ['pride', 'proud', 'prideful', 'vanity', 'vain', 'arrogance', 'arrogant'],
+    'humble': ['humble', 'humbled', 'humbly', 'humility', 'meek', 'meekness', 'lowly'],
+
+    // ── Virtues & character ──
+    'faith': ['faith', 'faithful', 'faithfully', 'faithfulness'],
+    'courage': ['courage', 'courageous', 'bravery', 'brave', 'boldness', 'bold'],
+    'patience': ['patience', 'patient', 'patiently', 'forbearance', 'longsuffering'],
+    'kindness': ['kindness', 'kind', 'kindly', 'compassion', 'compassionate', 'tender', 'tenderness', 'gentle', 'gentleness'],
+    'honesty': ['honesty', 'honest', 'honestly', 'integrity', 'truthful', 'truthfulness'],
+    'charity': ['charity', 'charitable', 'generosity', 'generous', 'benevolence'],
+    'virtue': ['virtue', 'virtuous', 'virtuousness', 'righteousness', 'righteous'],
+    'chastity': ['chastity', 'chaste', 'purity', 'pure', 'morality', 'moral', 'modesty', 'modest'],
+    'wisdom': ['wisdom', 'wise', 'wisely', 'discernment', 'discern', 'prudent', 'prudence'],
+
+    // ── Actions & practices ──
+    'pray': ['pray', 'prayed', 'praying', 'prayer', 'prayers', 'prayerful', 'supplication'],
+    'serve': ['serve', 'served', 'serving', 'service', 'servant', 'servants', 'ministry', 'minister'],
+    'teach': ['teach', 'taught', 'teaching', 'teachings', 'teacher', 'instruct', 'instruction'],
+    'obey': ['obey', 'obeyed', 'obedience', 'obedient', 'disobey', 'disobedience'],
+    'repent': ['repent', 'repentance', 'repenting', 'repented'],
+    'forgive': ['forgive', 'forgave', 'forgiven', 'forgiveness', 'forgiving', 'mercy', 'merciful'],
+    'sacrifice': ['sacrifice', 'sacrificed', 'sacrifices', 'sacrificing', 'offering', 'consecrate', 'consecrated'],
+    'worship': ['worship', 'worshipped', 'worshipping', 'adoration', 'adore', 'praise', 'reverence', 'revere'],
+    'fast': ['fast', 'fasting', 'fasted'],
+    'tithe': ['tithe', 'tithes', 'tithing'],
+
+    // ── Sin & struggle ──
+    'sin': ['sin', 'sins', 'sinful', 'sinner', 'sinners', 'sinning', 'transgression', 'transgress', 'iniquity', 'wickedness', 'wicked'],
+    'temptation': ['temptation', 'temptations', 'tempt', 'tempted', 'enticement', 'entice'],
+    'suffer': ['suffer', 'suffered', 'suffering', 'sufferings', 'affliction', 'afflicted', 'tribulation', 'adversity'],
+    'trial': ['trial', 'trials', 'tribulation', 'tribulations', 'hardship', 'hardships'],
+    'doubt': ['doubt', 'doubts', 'doubted', 'doubting', 'uncertainty', 'uncertain', 'skeptic'],
+    'weakness': ['weakness', 'weaknesses', 'weak', 'frailty', 'infirmity'],
+
+    // ── Doctrine & theology ──
+    'atonement': ['atonement', 'atone', 'atoned', 'atoning', 'redemption', 'redeem', 'redeemed', 'redeemer'],
+    'salvation': ['salvation', 'saved', 'exaltation', 'exalted', 'eternal life'],
+    'resurrection': ['resurrection', 'resurrected', 'risen', 'rise again'],
+    'revelation': ['revelation', 'revelations', 'revealed', 'reveal', 'inspiration', 'inspired', 'inspire'],
+    'covenant': ['covenant', 'covenants', 'covenanted'],
+    'commandment': ['commandment', 'commandments', 'precept', 'precepts', 'statute', 'statutes'],
+    'scripture': ['scripture', 'scriptures', 'scriptural', 'bible', 'biblical'],
+    'prophecy': ['prophecy', 'prophesy', 'prophesied', 'prophetic', 'prophet', 'prophets'],
+    'priesthood': ['priesthood'],
+    'baptism': ['baptism', 'baptize', 'baptized', 'baptismal'],
+    'sacrament': ['sacrament', 'sacramental', 'ordinance', 'ordinances'],
+    'temple': ['temple', 'temples', 'endowment', 'endowed', 'sealing', 'sealings'],
+    'mission': ['mission', 'missions', 'missionary', 'missionaries', 'proselyte'],
+    'blessing': ['blessing', 'blessings', 'blessed', 'bless'],
+    'testimony': ['testimony', 'testimonies', 'testify', 'testifying', 'witness', 'bear witness'],
+    'grace': ['grace', 'gracious', 'graciously'],
+    'eternal': ['eternal', 'eternity', 'everlasting', 'forever', 'immortal', 'immortality'],
+
+    // ── God & divine ──
+    'heavenly mother': ['heavenly mother', 'mother in heaven', 'heavenly parents', 'divine mother'],
+    'heavenly father': ['heavenly father', 'father in heaven', 'god the father'],
+    'jesus': ['jesus', 'christ', 'savior', 'redeemer', 'messiah', 'lord'],
+    'holy ghost': ['holy ghost', 'holy spirit', 'comforter', 'spirit of god'],
+
+    // ── Social topics ──
+    'certainty': ['i know', 'i testify', 'i bear testimony', 'i bear witness', 'i declare', 'i witness', 'i am certain', 'this is true', 'god lives', 'christ lives', 'i so testify', 'the church is true', 'the gospel is true'],
+    'hedging': ['perhaps', 'maybe', 'might be', 'possibly', 'it seems', 'it appears', 'i wonder', 'i would suggest', 'in my opinion', 'i suppose'],
+    'deference': ['i am grateful', 'i am humbled', 'i feel inadequate', 'who am i to', 'bear with me', 'forgive me if', 'what a privilege', 'what an honor', 'unworthy'],
+    'gay': ['gay', 'homosexual', 'homosexuality', 'same-sex', 'lesbian', 'lgbt', 'same-gender', 'sexual orientation', 'attraction to the same'],
+    'satan': ['satan', 'devil', 'lucifer', 'adversary', 'evil one', 'father of lies', 'tempter', 'serpent', 'perdition'],
+    'hell': ['hell', 'damnation', 'damned', 'outer darkness', 'lake of fire', 'hellfire', 'perdition', 'infernal'],
+    'modesty': ['modesty', 'modest', 'immodest', 'immodesty'],
+    'war': ['war', 'wars', 'warfare', 'military', 'battle', 'battles', 'soldier', 'soldiers'],
+    'death': ['death', 'die', 'died', 'dying', 'dead', 'mortal', 'mortality'],
+    'strength': ['strength', 'strengthen', 'strengthened', 'strong', 'stronger', 'mighty', 'might', 'power', 'powerful'],
+};
+
+function getSearchTerms(query) {
+    const useSynonyms = document.getElementById('synonymToggle').checked;
+    if (!useSynonyms) return [query];
+
+    // Check if query matches a synonym group key
+    const key = query.trim();
+    if (SYNONYMS[key]) return SYNONYMS[key];
+
+    // Check if query is IN any synonym group
+    for (const [k, syns] of Object.entries(SYNONYMS)) {
+        if (syns.includes(key)) return syns;
+    }
+
+    // No synonyms found, just use the query
+    return [key];
+}
+
+// Word-boundary matching: "mother" matches "mother" but NOT "grandmother" or "mothers"
+// For phrases like "heavenly mother" it matches the exact phrase with word boundaries
+function countIn(text, q) {
+    // Escape regex special chars in the query
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('\\b' + escaped + '\\b', 'gi');
+    const matches = text.match(re);
+    return matches ? matches.length : 0;
+}
+
+function zTest(c1, n1, c2, n2) {
+    if (n1 === 0 || n2 === 0) return { z: 0, p: 1 };
+    const p1=c1/n1, p2=c2/n2, p=(c1+c2)/(n1+n2);
+    const se = Math.sqrt(p*(1-p)*(1/n1+1/n2));
+    if (se === 0) return { z:0, p:1 };
+    const z = (p1-p2)/se, a = Math.abs(z);
+    const t = 1/(1+0.2316419*a);
+    const d = 0.3989423*Math.exp(-a*a/2);
+    const prob = d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
+    return { z, p: 2*prob };
+}
+
+function doSearch() {
+    const rawQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!rawQuery) return;
+    const terms = getSearchTerms(rawQuery);
+    const query = rawQuery; // keep for display
+
+    // Count function that checks ALL synonym terms
+    function countTerms(text) {
+        let total = 0;
+        for (const term of terms) total += countIn(text, term);
+        return total;
+    }
+
+    // Filter by session type first, then gender
+    let filtered = talks;
+    if (sessionType === 'general') filtered = filtered.filter(t => t.st === 'g');
+    if (sessionType === 'women') filtered = filtered.filter(t => t.st === 'w');
+    if (sessionType === 'priesthood') filtered = filtered.filter(t => t.st === 'p');
+    if (gender === 'women') filtered = filtered.filter(t => t.g === 'f');
+    if (gender === 'men') filtered = filtered.filter(t => t.g === 'm');
+
+    const maxYear = Math.max(...filtered.map(t => t.y));
+
+    // Build buckets based on time mode
+    let buckets = []; // each: { label, talks: [...] }
+
+    if (timeMode === 'session') {
+        for (let y = minYear; y <= maxYear; y++) {
+            for (const s of ['A', 'O']) {
+                const bt = filtered.filter(t => t.y === y && t.s === s);
+                if (bt.length > 0) buckets.push({ label: `${y} ${s==='A'?'Apr':'Oct'}`, talks: bt });
+            }
+        }
+    } else if (timeMode === 'decade') {
+        for (let d = Math.floor(minYear/10)*10; d <= maxYear; d += 10) {
+            const bt = filtered.filter(t => t.y >= d && t.y < d+10);
+            if (bt.length > 0) buckets.push({ label: `${d}s`, talks: bt });
+        }
+    } else {
+        for (let y = minYear; y <= maxYear; y++) {
+            const bt = filtered.filter(t => t.y === y);
+            if (bt.length > 0) buckets.push({ label: y, talks: bt });
+        }
+    }
+
+    // Compute stats per bucket
+    const data = buckets.map(b => {
+        let cnt = 0, wds = 0, talksWithWord = 0;
+        b.talks.forEach(t => {
+            const c = countTerms(t.t);
+            cnt += c;
+            wds += t.w;
+            if (c > 0) talksWithWord++;
+        });
+        return {
+            label: b.label,
+            count: cnt,
+            words: wds,
+            numTalks: b.talks.length,
+            talksWithWord,
+            rate: wds > 0 ? cnt/wds*10000 : 0,         // per 10k words
+            pct: b.talks.length > 0 ? talksWithWord/b.talks.length*100 : 0,  // % of talks
+            avg: b.talks.length > 0 ? cnt/b.talks.length : 0,  // per talk average
+        };
+    });
+
+    // Pick the right value for chart
+    const valKey = metric === 'rate' ? 'rate' : metric === 'raw' ? 'count' : metric === 'pct' ? 'pct' : 'avg';
+    const yLabel = metric === 'rate' ? 'Per 10,000 words'
+                 : metric === 'raw' ? 'Raw count'
+                 : metric === 'pct' ? '% of talks containing word'
+                 : 'Avg occurrences per talk';
+
+    // Gender stats (within current session filter)
+    let sessionFiltered = talks;
+    if (sessionType === 'general') sessionFiltered = sessionFiltered.filter(t => t.st === 'g');
+    if (sessionType === 'women') sessionFiltered = sessionFiltered.filter(t => t.st === 'w');
+    if (sessionType === 'priesthood') sessionFiltered = sessionFiltered.filter(t => t.st === 'p');
+    let wCnt=0, wWds=0, mCnt=0, mWds=0, wTalks=0, mTalks=0, wWith=0, mWith=0;
+    sessionFiltered.filter(t => t.g === 'f').forEach(t => { const c=countIn(t.t,query); wCnt+=c; wWds+=t.w; wTalks++; if(c>0)wWith++; });
+    sessionFiltered.filter(t => t.g === 'm').forEach(t => { const c=countIn(t.t,query); mCnt+=c; mWds+=t.w; mTalks++; if(c>0)mWith++; });
+    const wRate = wWds>0 ? (wCnt/wWds*10000).toFixed(2) : '0';
+    const mRate = mWds>0 ? (mCnt/mWds*10000).toFixed(2) : '0';
+    const wPct = (wWith/wTalks*100).toFixed(1);
+    const mPct = (mWith/mTalks*100).toFixed(1);
+
+    const test = zTest(wCnt, wWds, mCnt, mWds);
+    const sig = test.p < 0.05;
+    const pDisp = test.p < 0.001 ? '< 0.001' : test.p.toFixed(3);
+
+    // Chart
+    const vals = data.map(d => d[valKey]);
+    const termLabel = terms.length > 1 ? `${terms.join(' + ')}` : `"${rawQuery}"`;
+    const lbl = `${termLabel} — ${yLabel.toLowerCase()}`;
+    const clr = gender==='women' ? '#B35488' : gender==='men' ? '#4A7FA5' : '#8C7058';
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('chart'), {
+        type: 'line',
+        data: { labels: data.map(d=>d.label), datasets: [{ label: lbl, data: vals, borderColor: clr, backgroundColor: clr+'20', borderWidth: 1.5, pointRadius: timeMode==='session'?1.5 : timeMode==='decade'?4 : 2.5, pointBackgroundColor: clr, fill: true, tension: 0.1 }] },
+        options: {
+            responsive: true,
+            plugins: { legend: { display:true, position:'top' }, tooltip: { callbacks: { afterLabel: ctx => { const d=data[ctx.dataIndex]; const synNote = terms.length > 1 ? `\nSearching: ${terms.join(', ')}` : '';
+return `${d.count} occurrences in ${d.numTalks} talks\n${d.talksWithWord} talks contain it (${d.pct.toFixed(1)}%)\n${d.words.toLocaleString()} total words${synNote}`; } } } },
+            scales: { y: { beginAtZero:true, title: { display:true, text: yLabel } }, x: { title: { display:true, text: timeMode==='session'?'Session':timeMode==='decade'?'Decade':'Year' }, ticks: { maxTicksLimit: timeMode==='session'?20:55 } } }
+        }
+    });
+
+    // Stats
+    const total = data.reduce((s,d) => s+d.count, 0);
+    const sigClr = sig ? '#27864A' : '#D4890A';
+    const sigTxt = sig ? 'Yes — statistically significant' : 'No — not significant';
+    const sp = document.getElementById('statsPanel');
+    sp.style.display = 'grid';
+    sp.innerHTML = `
+        <div class="stat-item"><div class="stat-num">${total.toLocaleString()}</div><div class="stat-label">Total occurrences</div></div>
+        <div class="stat-item"><div class="stat-num f">${wCnt.toLocaleString()}</div><div class="stat-label">Women (${wRate}/10k, ${wPct}% of talks)</div></div>
+        <div class="stat-item"><div class="stat-num m">${mCnt.toLocaleString()}</div><div class="stat-label">Men (${mRate}/10k, ${mPct}% of talks)</div></div>
+        <div class="stat-item"><div class="stat-num">${parseFloat(wRate)>parseFloat(mRate)?'&#9792; Women':'&#9794; Men'}</div><div class="stat-label">Say it more (per word)</div></div>
+        <div class="stat-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:0.75rem;margin-top:0.25rem;">
+            <div class="stat-num" style="font-size:1rem;color:${sigClr}">${sigTxt}</div>
+            <div class="stat-label">Gender difference (p = ${pDisp}, z = ${test.z.toFixed(2)})</div>
+        </div>`;
+}
+
+loadData();
+</script>
+</body>
+</html>

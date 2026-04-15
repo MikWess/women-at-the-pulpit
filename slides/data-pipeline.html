@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pipeline — How We Built the Database</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FAF6F0;
+            --card: #FFFFFF;
+            --text: #2C2420;
+            --muted: #6B5D52;
+            --border: #E0D6CC;
+            --accent: #8C7058;
+            --female: #B35488;
+            --female-bg: #F9EBF3;
+            --male: #4A7FA5;
+            --male-bg: #EBF2F8;
+            --green: #27864A;
+            --green-bg: #EBF7EE;
+            --red: #C0392B;
+            --arrow: #C4B5A4;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 400;
+            font-style: italic;
+            margin-bottom: 0.25rem;
+        }
+        .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 2.5rem; }
+
+        /* ── Pipeline layout ── */
+        .pipeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .step {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            gap: 1rem;
+            align-items: start;
+        }
+        .step-number {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            margin-top: 1rem;
+        }
+        .step-content {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .step-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 0.25rem;
+        }
+        .step-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .step-desc {
+            font-size: 0.88rem;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        /* ── Table visualizations ── */
+        .table-viz {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+        }
+        .table-viz .filename {
+            background: #F3EDE4;
+            padding: 0.4rem 0.75rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 500;
+            font-size: 0.78rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filename .badge {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-weight: 500;
+        }
+        .badge.rows { background: var(--green-bg); color: var(--green); }
+        .badge.cols { background: var(--male-bg); color: var(--male); }
+
+        .table-header {
+            display: grid;
+            padding: 0.4rem 0.75rem;
+            background: #FAFAFA;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+        .table-row {
+            display: grid;
+            padding: 0.35rem 0.75rem;
+            border-bottom: 1px solid #F0EBE5;
+            font-size: 0.78rem;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .table-row:last-child { border-bottom: none; }
+        .table-row.female-row { background: var(--female-bg); }
+        .table-row.male-row { background: var(--male-bg); }
+        .table-row.ellipsis {
+            text-align: center;
+            color: var(--muted);
+            font-style: italic;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        /* Grid templates for each table */
+        .cols-7 { grid-template-columns: 2fr 1.5fr 1.5fr 0.5fr 0.6fr 0.4fr 0.5fr; }
+        .cols-2 { grid-template-columns: 2fr 1fr; }
+        .cols-8 { grid-template-columns: 1.8fr 1.3fr 1.3fr 0.5fr 0.6fr 0.4fr 0.5fr 0.7fr; }
+
+        .cell-highlight {
+            font-weight: 500;
+        }
+        .cell-female { color: var(--female); font-weight: 500; }
+        .cell-male { color: var(--male); font-weight: 500; }
+        .cell-new {
+            background: #FFF3CD;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        /* ── Arrow between steps ── */
+        .arrow-container {
+            display: flex;
+            justify-content: center;
+            padding: 0.25rem 0 0.25rem 60px;
+        }
+        .arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--arrow);
+        }
+        .arrow-line {
+            width: 2px;
+            height: 20px;
+            background: var(--arrow);
+        }
+        .arrow-label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            font-style: italic;
+            margin: 0.25rem 0;
+        }
+        .arrow svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--arrow);
+        }
+
+        /* ── Merge visualization ── */
+        .merge-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        .merge-box {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 2px solid;
+        }
+        .merge-box.left { border-color: var(--male); background: var(--male-bg); }
+        .merge-box.right { border-color: var(--female); background: var(--female-bg); }
+        .merge-box.result { border-color: var(--green); background: var(--green-bg); }
+        .merge-plus {
+            font-size: 1.5rem;
+            color: var(--muted);
+            font-weight: 300;
+        }
+        .merge-equals {
+            font-size: 1.5rem;
+            color: var(--green);
+            font-weight: 500;
+        }
+
+        /* ── Stats cards ── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .stat-label {
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .stat-number.female-num { color: var(--female); }
+        .stat-number.male-num { color: var(--male); }
+
+        /* ── Problem callout ── */
+        .problem {
+            background: #FFF3CD;
+            border: 1px solid #F0DCA0;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-size: 0.82rem;
+            margin: 0.75rem 0;
+        }
+        .problem strong { color: #D4890A; }
+
+        .fix {
+            background: var(--green-bg);
+            border: 1px solid #B8DFC4;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-size: 0.82rem;
+            margin: 0.75rem 0;
+        }
+        .fix strong { color: var(--green); }
+
+        /* ── Layers diagram ── */
+        .layers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin: 0.75rem 0;
+        }
+        .layer {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+        }
+        .layer-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+        .layer-1 { background: #EBF7EE; }
+        .layer-1 .layer-num { background: var(--green); }
+        .layer-2 { background: #EBF3FA; }
+        .layer-2 .layer-num { background: var(--male); }
+        .layer-3 { background: #FFF8E8; }
+        .layer-3 .layer-num { background: var(--yellow, #D4890A); }
+        .layer-4 { background: #F3EDE4; }
+        .layer-4 .layer-num { background: var(--muted); }
+
+        .layer-count {
+            margin-left: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 500;
+            font-size: 0.78rem;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .step { grid-template-columns: 40px 1fr; }
+            .step-number { width: 36px; height: 36px; font-size: 0.9rem; }
+            .arrow-container { padding-left: 40px; }
+            .merge-diagram { flex-direction: column; }
+            .cols-7, .cols-8 { font-size: 0.65rem; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>How We Built the Database</h1>
+<p class="subtitle">From raw scrape to verified, gender-tagged dataset — every step of the pipeline.</p>
+
+<div class="pipeline">
+
+    <!-- ═══ STEP 1: Original scrape ═══ -->
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <div class="step-label">The raw scrape</div>
+            <div class="step-title">conference_talks.csv (original)</div>
+            <div class="step-desc">Scraped 4,188 talks from churchofjesuschrist.org (1971–2025). No gender information — just what was on the page.</div>
+
+            <div class="table-viz">
+                <div class="filename">
+                    conference_talks.csv
+                    <span><span class="badge rows">4,188 rows</span> <span class="badge cols">7 columns</span></span>
+                </div>
+                <div class="table-header cols-7">
+                    <span>title</span><span>speaker</span><span>calling</span><span>year</span><span>season</span><span>url</span><span>talk</span>
+                </div>
+                <div class="table-row cols-7">
+                    <span>"Teach One A…"</span><span>David B. Haight</span><span>Asst to the 12</span><span>1971</span><span>April</span><span>…</span><span>…</span>
+                </div>
+                <div class="table-row cols-7">
+                    <span>"Relief Soci…"</span><span>Barbara B. Smith</span><span>RS Gen Pres</span><span>1975</span><span>April</span><span>…</span><span>…</span>
+                </div>
+                <div class="table-row cols-7">
+                    <span>"How the Pr…"</span><span>Laudy Ruth Kaouk</span><span>Slate Canyon 14th</span><span>2020</span><span>April</span><span>…</span><span>…</span>
+                </div>
+                <div class="table-row cols-7 ellipsis" style="grid-template-columns: 1fr;">
+                    <span>… 4,185 more rows …</span>
+                </div>
+            </div>
+
+            <div class="problem">
+                <strong>Problem:</strong> No gender column. We can't answer any of our research questions without knowing who is a woman.
+            </div>
+        </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow-container">
+        <div class="arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-label">we need to classify every speaker</div>
+            <svg viewBox="0 0 16 16"><path d="M8 12l-5-5h3V2h4v5h3z"/></svg>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 2: Gender table ═══ -->
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <div class="step-label">The gender lookup table</div>
+            <div class="step-title">speaker_genders.csv (new)</div>
+            <div class="step-desc">Built a verified gender for every unique speaker using a layered approach — most reliable sources first.</div>
+
+            <div class="layers">
+                <div class="layer layer-1">
+                    <span class="layer-num">1</span>
+                    <span><strong>Church Historian's Press</strong> — official list of women speakers + web confirmations</span>
+                    <span class="layer-count">66 women</span>
+                </div>
+                <div class="layer layer-2">
+                    <span class="layer-num">2</span>
+                    <span><strong>Web-verified overrides</strong> — names the library got wrong (Marion D. Hanks = male, etc.)</span>
+                    <span class="layer-count">7 fixed</span>
+                </div>
+                <div class="layer layer-3">
+                    <span class="layer-num">3</span>
+                    <span><strong>gender_guesser library</strong> — Python library that classifies first names</span>
+                    <span class="layer-count">527 classified</span>
+                </div>
+                <div class="layer layer-4">
+                    <span class="layer-num">4</span>
+                    <span><strong>Calling-based fallback</strong> — for names the library doesn't recognize</span>
+                    <span class="layer-count">153 remaining</span>
+                </div>
+            </div>
+
+            <div class="table-viz">
+                <div class="filename">
+                    speaker_genders.csv
+                    <span><span class="badge rows">615 unique speakers</span> <span class="badge cols">2 columns</span></span>
+                </div>
+                <div class="table-header cols-2">
+                    <span>speaker</span><span>gender</span>
+                </div>
+                <div class="table-row cols-2 female-row">
+                    <span>Barbara B. Smith</span><span class="cell-female">female</span>
+                </div>
+                <div class="table-row cols-2 male-row">
+                    <span>Marion D. Hanks</span><span class="cell-male">male</span>
+                </div>
+                <div class="table-row cols-2 female-row">
+                    <span>Laudy Ruth Kaouk</span><span class="cell-female">female</span>
+                </div>
+                <div class="table-row cols-2 male-row">
+                    <span>Joni L. Koch</span><span class="cell-male">male</span>
+                </div>
+                <div class="table-row cols-2 female-row">
+                    <span>J. Anette Dennis</span><span class="cell-female">female</span>
+                </div>
+                <div class="table-row cols-2 ellipsis" style="grid-template-columns: 1fr;">
+                    <span>… 610 more speakers …</span>
+                </div>
+            </div>
+
+            <div class="fix">
+                <strong>Catches what the old method missed:</strong> Laudy Ruth Kaouk (youth speaker, no RS/YW/Primary calling), Fono Lavatai (Samoan ward calling), J. Anette Dennis (first initial hid gender). Correctly excludes Marion D. Hanks, Marion G. Romney, Shirley D. Christensen (men with "female" first names).
+            </div>
+        </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow-container">
+        <div class="arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-label">merge on "speaker" column (like a SQL JOIN)</div>
+            <svg viewBox="0 0 16 16"><path d="M8 12l-5-5h3V2h4v5h3z"/></svg>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 3: Merged ═══ -->
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <div class="step-label">The final database</div>
+            <div class="step-title">conference_talks.csv (merged)</div>
+            <div class="step-desc">Every talk now has a verified gender column. This is what all analysis scripts read.</div>
+
+            <div class="merge-diagram">
+                <div class="merge-box left">conference_talks.csv<br><span style="font-size:0.7rem;color:var(--muted)">4,188 talks × 7 cols</span></div>
+                <span class="merge-plus">+</span>
+                <div class="merge-box right">speaker_genders.csv<br><span style="font-size:0.7rem;color:var(--muted)">615 speakers × 2 cols</span></div>
+                <span class="merge-equals">=</span>
+                <div class="merge-box result">conference_talks.csv<br><span style="font-size:0.7rem;color:var(--muted)">4,188 talks × 8 cols</span></div>
+            </div>
+
+            <div class="table-viz">
+                <div class="filename">
+                    conference_talks.csv (final)
+                    <span><span class="badge rows">4,188 rows</span> <span class="badge cols">8 columns</span></span>
+                </div>
+                <div class="table-header cols-8">
+                    <span>title</span><span>speaker</span><span>calling</span><span>year</span><span>season</span><span>url</span><span>talk</span><span class="cell-new">gender</span>
+                </div>
+                <div class="table-row cols-8 male-row">
+                    <span>"Teach One…"</span><span>David B. Haight</span><span>Asst to 12</span><span>1971</span><span>Apr</span><span>…</span><span>…</span><span class="cell-male">male</span>
+                </div>
+                <div class="table-row cols-8 female-row">
+                    <span>"Relief So…"</span><span>Barbara B. Smith</span><span>RS Gen Pres</span><span>1975</span><span>Apr</span><span>…</span><span>…</span><span class="cell-female">female</span>
+                </div>
+                <div class="table-row cols-8 male-row">
+                    <span>"The Manti…"</span><span>Marion D. Hanks</span><span>1st Q of 70</span><span>1976</span><span>Oct</span><span>…</span><span>…</span><span class="cell-male">male</span>
+                </div>
+                <div class="table-row cols-8 female-row">
+                    <span>"How the P…"</span><span>Laudy Ruth Kaouk</span><span>Slate Cyn 14</span><span>2020</span><span>Apr</span><span>…</span><span>…</span><span class="cell-female">female</span>
+                </div>
+                <div class="table-row cols-8 male-row">
+                    <span>"Humble to…"</span><span>Joni L. Koch</span><span>Of the 70</span><span>2023</span><span>Oct</span><span>…</span><span>…</span><span class="cell-male">male</span>
+                </div>
+                <div class="table-row cols-8 ellipsis" style="grid-template-columns: 1fr;">
+                    <span>… 4,183 more rows …</span>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">4,188</div>
+                    <div class="stat-label">Total talks</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number female-num">395</div>
+                    <div class="stat-label">Women's talks</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number male-num">3,793</div>
+                    <div class="stat-label">Men's talks</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number female-num">100</div>
+                    <div class="stat-label">Unique women</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number male-num">653</div>
+                    <div class="stat-label">Unique men</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">54</div>
+                    <div class="stat-label">Years covered</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

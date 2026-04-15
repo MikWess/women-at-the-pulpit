@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+*.py
+slides/
+questions/
+knowledge.json
+dev.md
+data/conference_talks.csv
+data/speaker_genders.csv
+.claude/

@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word List Bias Review — Women at the Pulpit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FAF6F0;
+            --card-bg: #FFFFFF;
+            --text: #2C2420;
+            --text-muted: #6B5D52;
+            --border: #E0D6CC;
+            --accent: #8C7058;
+            --red: #C0392B;
+            --red-bg: #FDECEC;
+            --red-border: #F1C0C0;
+            --yellow: #D4890A;
+            --yellow-bg: #FFF8E8;
+            --yellow-border: #F0DCA0;
+            --green: #27864A;
+            --green-bg: #EBF7EE;
+            --green-border: #B8DFC4;
+            --blue: #2E6B9E;
+            --blue-bg: #EBF3FA;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 2.2rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+            font-style: italic;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .intro {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.92rem;
+        }
+
+        .intro h2 {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .intro p { margin-bottom: 0.5rem; }
+
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .risk-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .risk-dot.high { background: var(--red); }
+        .risk-dot.medium { background: var(--yellow); }
+        .risk-dot.low { background: var(--green); }
+
+        /* ── Script sections ── */
+        .script-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .script-header {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .script-desc {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            margin-bottom: 1rem;
+        }
+
+        .structural-issue {
+            background: var(--red-bg);
+            border: 1px solid var(--red-border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.88rem;
+        }
+
+        .structural-issue strong {
+            color: var(--red);
+        }
+
+        .list-header {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 1.25rem 0 0.5rem 0;
+            color: var(--accent);
+        }
+
+        /* ── Word cards ── */
+        .word-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.75rem;
+            align-items: start;
+            transition: border-color 0.2s, opacity 0.2s;
+        }
+
+        .word-card.decided-keep {
+            border-color: var(--green-border);
+            background: var(--green-bg);
+        }
+
+        .word-card.decided-remove {
+            border-color: var(--red-border);
+            background: var(--red-bg);
+            opacity: 0.7;
+        }
+
+        .word-card.decided-fix {
+            border-color: #C4A0E8;
+            background: #F5EEFA;
+        }
+
+        .word-info {
+            min-width: 0;
+        }
+
+        .word-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .word-problem {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .word-example {
+            font-style: italic;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            padding-left: 0.75rem;
+            border-left: 2px solid var(--border);
+        }
+
+        .word-actions {
+            display: flex;
+            gap: 0.35rem;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 0.3rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--card-bg);
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn:hover { border-color: var(--accent); }
+        .btn.active-keep { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+        .btn.active-remove { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+        .btn.active-fix { background: #F5EEFA; border-color: #9B59B6; color: #9B59B6; }
+
+        /* ── Missing words ── */
+        .missing-section {
+            background: var(--blue-bg);
+            border: 1px solid #B8D4E8;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .missing-section strong { color: var(--blue); }
+
+        .missing-word {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin: 0.25rem 0.25rem 0.25rem 0;
+        }
+
+        .missing-word code {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            background: white;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            border: 1px solid #B8D4E8;
+        }
+
+        .missing-btn {
+            padding: 0.15rem 0.4rem;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .missing-btn:hover { border-color: var(--green); }
+        .missing-btn.added { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+
+        /* ── Summary panel ── */
+        .summary-panel {
+            position: sticky;
+            bottom: 0;
+            background: var(--card-bg);
+            border-top: 2px solid var(--accent);
+            padding: 1rem 1.5rem;
+            margin: 2rem -2rem 0 -2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.88rem;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+            z-index: 10;
+        }
+
+        .summary-counts {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .summary-counts span {
+            font-weight: 500;
+        }
+
+        .export-btn {
+            padding: 0.5rem 1.25rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        .export-btn:hover { background: #7A6048; }
+
+        /* ── Progress bar ── */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        /* ── TOC ── */
+        .toc {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+            font-size: 0.88rem;
+        }
+
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .toc a:hover { text-decoration: underline; }
+
+        .toc ul {
+            list-style: none;
+            columns: 2;
+            gap: 0.5rem;
+        }
+
+        .toc li {
+            margin-bottom: 0.3rem;
+            break-inside: avoid;
+        }
+
+        .toc-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .word-card { grid-template-columns: auto 1fr; }
+            .word-actions { grid-column: 1 / -1; justify-content: flex-end; }
+            .toc ul { columns: 1; }
+            .summary-panel { margin: 2rem -1rem 0; padding: 0.75rem 1rem; flex-direction: column; gap: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Bias Review — Women at the Pulpit</h1>
+<p class="subtitle">Go through every word in every list. Decide what stays, what goes, and what needs fixing. This IS the research process.</p>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+
+<div class="intro">
+    <h2>Why this matters</h2>
+    <p>We built scripts that count words to answer questions about women in General Conference. But <strong>words are not concepts</strong>. The word "mother" appears in "Heavenly Mother" (theology), "my mother" (personal story), and "mother earth" (metaphor). If we count all of those as "motherhood," our conclusions are wrong.</p>
+    <p>Below is every word in every list, with an honest assessment of its bias risk. For each one, decide:</p>
+    <div class="legend">
+        <div class="legend-item"><span class="btn active-keep">Keep</span> — this word is solid, leave it</div>
+        <div class="legend-item"><span class="btn active-remove">Cut</span> — too ambiguous, remove it</div>
+        <div class="legend-item"><span class="btn active-fix">Needs fix</span> — good concept, but the matching needs to be tighter</div>
+    </div>
+    <p style="margin-top:0.5rem">There's also a <strong>"substring collision"</strong> problem: <code>.count("war")</code> finds "war" inside "ward" (an LDS congregation). These are flagged below. The fix is using word-boundary matching — we'll implement that after you review.</p>
+</div>
+
+<div class="toc">
+    <strong>Jump to a script:</strong>
+    <ul id="tocList"></ul>
+</div>
+
+<div id="content"></div>
+
+<div class="summary-panel">
+    <div class="summary-counts">
+        <span style="color:var(--green)">Keep: <span id="keepCount">0</span></span>
+        <span style="color:var(--red)">Cut: <span id="removeCount">0</span></span>
+        <span style="color:#9B59B6">Fix: <span id="fixCount">0</span></span>
+        <span style="color:var(--text-muted)">Undecided: <span id="undecidedCount">0</span></span>
+    </div>
+    <button class="export-btn" onclick="exportDecisions()">Export my decisions</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// DATA — every word, its risk, and the reason
+// ════════════════════════════════════════════════════════════════
+
+const scripts = [
+    {
+        id: "helpers",
+        name: "helpers.py — Gender Detection",
+        desc: "This affects EVERY script. How we decide who is a woman.",
+        structural: 'Only detects women by calling keywords: "relief society", "young women", "primary". Women who spoke under other callings (wives of authorities in the 1970s, special guests) are classified as men. This undercounts women speakers.',
+        lists: [
+            {
+                name: "WOMEN_CALLING_KEYWORDS",
+                words: [
+                    { word: '"relief society"', risk: "low", problem: "Clear match for the women's organization.", rec: "keep" },
+                    { word: '"young women"', risk: "low", problem: "Clear match for the girls' organization.", rec: "keep" },
+                    { word: '"primary"', risk: "medium", problem: 'Primary is the children\'s org (led by women). Low collision risk, but we miss women who spoke under other callings — especially pre-1980s wives of leaders.', rec: "fix" },
+                ]
+            }
+        ],
+        missing: ['"sister" (LDS title for women — could catch more speakers)', '"women" in calling text']
+    },
+    {
+        id: "04",
+        name: "04 — Gratitude & Deference",
+        desc: "Do women open with 'I'm grateful' or 'I'm humbled'?",
+        lists: [
+            {
+                name: "GRATITUDE_PHRASES",
+                words: [
+                    { word: '"i\'m grateful"', risk: "low", problem: "Clear signal of gratitude.", rec: "keep" },
+                    { word: '"i am grateful"', risk: "low", problem: "Same as above.", rec: "keep" },
+                    { word: '"i\'m thankful"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"i am thankful"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"thank you"', risk: "medium", problem: 'Matches "thank you, Heavenly Father" (prayer), "thank you, Bishop" (anecdote), and mid-talk politeness — not just opening deference.', example: '"Thank you, Heavenly Father, for the Atonement" — prayer, not deference', rec: "keep" },
+                    { word: '"thanks to"', risk: "medium", problem: '"Thanks to the Atonement" is theological, not interpersonal gratitude. Different phenomenon being conflated.', example: '"Thanks to the Restoration, we have the Book of Mormon"', rec: "keep" },
+                    { word: '"my gratitude"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"deeply grateful"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"so grateful"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"so thankful"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"i appreciate"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"what a privilege"', risk: "low", problem: "Clear deference.", rec: "keep" },
+                    { word: '"what an honor"', risk: "low", problem: "Clear deference.", rec: "keep" },
+                    { word: '"grateful for this opportunity"', risk: "low", problem: "Very specific, very clean.", rec: "keep" },
+                    { word: '"grateful to be here"', risk: "low", problem: "Clear.", rec: "keep" },
+                ]
+            },
+            {
+                name: "DEFERENCE_PHRASES",
+                words: [
+                    { word: '"i\'m not worthy"', risk: "low", problem: "Clear self-deprecation.", rec: "keep" },
+                    { word: '"i am not worthy"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"who am i to"', risk: "low", problem: "Clear deference.", rec: "keep" },
+                    { word: '"i\'m humbled"', risk: "medium", problem: "Stock conference phrase used by nearly ALL speakers regardless of gender. Will inflate both genders equally, obscuring the real signal.", rec: "keep" },
+                    { word: '"i am humbled"', risk: "medium", problem: "Same as above.", rec: "keep" },
+                    { word: '"i feel inadequate"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"my inadequacy"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"i pray for the spirit"', risk: "high", problem: "Standard LDS talk-opening convention, NOT deference. Nearly every speaker (male and female) says this. Counting it as deference frames a universal religious practice as self-deprecation.", example: 'Almost every talk opens with "I pray for the Spirit to be with us" — this is ritual, not insecurity', rec: "remove" },
+                    { word: '"i pray that the spirit"', risk: "high", problem: "Same problem — universal convention, not gendered deference.", rec: "remove" },
+                    { word: '"bear with me"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"forgive me if"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"i hope i can"', risk: "medium", problem: '"I hope I can convey" (deference) vs "I hope I can be like the Savior" (aspiration). Ambiguous.', rec: "keep" },
+                    { word: '"with your permission"', risk: "low", problem: "Clear deference.", rec: "keep" },
+                    { word: '"may i share"', risk: "medium", problem: "Rhetorical storytelling device, not necessarily deference. Men use it too as a transition.", rec: "keep" },
+                    { word: '"if i may"', risk: "low", problem: "Mild deference.", rec: "keep" },
+                ]
+            }
+        ],
+        missing: ['"i stand before you"', '"please be patient with me"', '"when i received this assignment"', '"i don\'t know why they called on me"']
+    },
+    {
+        id: "05",
+        name: "05 — Certainty vs Hedging",
+        desc: '"I know" vs "perhaps" — who sounds more sure?',
+        structural: '"I believe" is categorized as HEDGING. In religious context, "I believe in God" is a declaration of faith — arguably stronger than "I know." This single classification error could invalidate the entire certainty comparison.',
+        lists: [
+            {
+                name: "CERTAINTY_PHRASES",
+                words: [
+                    { word: '"i know that"', risk: "medium", problem: 'Usually testimonial in LDS context ("I know that God lives") but also matches mundane knowledge ("I know that my sister loves music").', rec: "keep" },
+                    { word: '"i know this"', risk: "low", problem: "Mostly testimonial in conference.", rec: "keep" },
+                    { word: '"i know he" / "i know she"', risk: "medium", problem: '"I know he lives" (testimony) vs "I know he was a good man" (personal).', rec: "keep" },
+                    { word: '"i know god" / "i know jesus"', risk: "low", problem: "Clearly testimonial.", rec: "keep" },
+                    { word: '"i testify"', risk: "low", problem: "THE definitive LDS certainty phrase.", rec: "keep" },
+                    { word: '"i bear testimony"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"i bear witness"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"i declare"', risk: "medium", problem: 'Can be non-testimonial: "I declare that this program will succeed."', rec: "keep" },
+                    { word: '"i witness that"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"i am certain"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"without doubt"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"surely"', risk: "high", problem: "A rhetorical/filler word, NOT a certainty declaration. \"Surely the Lord will bless us\" expresses hope or assumption, not personal testimony. Inflates certainty counts misleadingly.", example: '"Surely we can do better" — this is a soft exhortation, not "I know"', rec: "remove" },
+                    { word: '"i promise you"', risk: "medium", problem: "From an apostle, this is a priesthood-authority statement. From a woman speaker, it may carry different weight. Same phrase, different authority.", rec: "keep" },
+                    { word: '"this is true"', risk: "low", problem: "Classic testimony.", rec: "keep" },
+                    { word: '"god lives" / "christ lives"', risk: "low", problem: "Pure testimony.", rec: "keep" },
+                    { word: '"jesus is the christ"', risk: "low", problem: "Pure testimony.", rec: "keep" },
+                ]
+            },
+            {
+                name: "HEDGING_PHRASES",
+                words: [
+                    { word: '"i think"', risk: "medium", problem: 'Can be confident ("I think the most important thing is...") or genuinely hedging.', rec: "keep" },
+                    { word: '"i believe"', risk: "high", problem: 'THE biggest bias in the entire project. In LDS testimony, "I believe in God" is a core declaration of faith, not uncertainty. Categorizing it as hedging systematically makes faith-expressing speakers look less authoritative.', example: '"I believe that Jesus is the Christ" — this is testimony, not hedging', rec: "remove" },
+                    { word: '"i feel that"', risk: "medium", problem: '"I feel that the Spirit is telling me" is describing spiritual experience, not hedging in LDS context.', rec: "keep" },
+                    { word: '"i feel like"', risk: "low", problem: "More colloquial, more clearly hedging.", rec: "keep" },
+                    { word: '"perhaps"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                    { word: '"maybe"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                    { word: '"might be"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                    { word: '"possibly"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                    { word: '"it seems"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                    { word: '"it appears"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                    { word: '"i wonder"', risk: "medium", problem: '"I wonder if we truly understand" is rhetorical and assertive, not uncertain.', rec: "keep" },
+                    { word: '"i hope that"', risk: "medium", problem: 'In Christianity, "hope" is a theological virtue, not weakness. "I hope that you will repent" is an exhortation.', rec: "keep" },
+                    { word: '"i would suggest"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                    { word: '"in my opinion"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                    { word: '"if i may"', risk: "low", problem: "Also appears in deference list (04) — will double-count across scripts.", rec: "keep" },
+                    { word: '"i suppose"', risk: "low", problem: "Clear hedge.", rec: "keep" },
+                ]
+            }
+        ],
+        missing: ['"i bear my testimony"', '"i so testify"', '"i bear solemn witness"', '"the church is true"', '"the book of mormon is true"', '"i know with every fiber"']
+    },
+    {
+        id: "06",
+        name: "06 — Womanhood vs Motherhood",
+        desc: "The most bias-prone script. Single words used as proxies for complex concepts.",
+        structural: 'Substring matching means "womanhood" counts as both "womanhood" AND "woman." Every plural ("mothers") counts the singular ("mother") too. This inflates womanhood counts by ~30-50%. Also, "mom" matches inside "moment" — the word "moment" appears hundreds of times and each one counts as "motherhood."',
+        lists: [
+            {
+                name: "MOTHERHOOD_WORDS",
+                words: [
+                    { word: '"mother"', risk: "high", problem: 'Substring of "grandmother," and matches "Heavenly Mother" (theology, analyzed in script 09), "Mother in Heaven," "mother tongue," "mother earth." Every "mothers" also counts "mother."', example: '"Our Heavenly Mother" — this is theology, not motherhood', rec: "fix" },
+                    { word: '"mothers"', risk: "medium", problem: "Mostly about motherhood. But contains 'mother' so every occurrence double-counts.", rec: "fix" },
+                    { word: '"motherhood"', risk: "low", problem: "The actual concept word. Clean.", rec: "keep" },
+                    { word: '"mothering"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"mom"', risk: "high", problem: 'CATASTROPHIC: "moment".count("mom") = 1. The word "moment" appears hundreds of times in the dataset. Every single one counts as a "motherhood" mention. Also matches "momentum," "commemorate."', example: '"At that moment, he felt the Spirit" — counted as motherhood', rec: "remove" },
+                    { word: '"moms"', risk: "low", problem: "Fine — unlikely substring collision.", rec: "keep" },
+                    { word: '"mommy"', risk: "low", problem: "Clear, but extremely rare in conference.", rec: "keep" },
+                    { word: '"nurture"', risk: "medium", problem: '"Nurture your testimony," "nurture the seed of faith" — not about mothering. Broadly used.', example: '"We must nurture the seed of faith" — not motherhood', rec: "keep" },
+                    { word: '"nurturing"', risk: "medium", problem: "Same issue.", rec: "keep" },
+                    { word: '"child-rearing"', risk: "low", problem: "Clear but very rare.", rec: "keep" },
+                    { word: '"homemaker"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"homemaking"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"cradle"', risk: "medium", problem: '"From the cradle to the grave" is a stock phrase meaning "throughout life," not about mothering.', rec: "keep" },
+                    { word: '"lullaby"', risk: "low", problem: "Clear, very rare.", rec: "keep" },
+                    { word: '"diaper"', risk: "low", problem: "Clear, very rare in conference.", rec: "keep" },
+                ]
+            },
+            {
+                name: "WOMANHOOD_WORDS",
+                words: [
+                    { word: '"woman"', risk: "medium", problem: 'Substring of "womanhood" and "womanly." Every "womanhood" double-counts. But "woman" is the core term.', rec: "fix" },
+                    { word: '"women"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"womanhood"', risk: "low", problem: "The actual concept. Clean. (Contains 'woman' though — substring.)", rec: "keep" },
+                    { word: '"feminine"', risk: "low", problem: "Clear. Substring of 'femininity' — double-counts.", rec: "fix" },
+                    { word: '"femininity"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"female"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"sisterhood"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"daughter"', risk: "medium", problem: '"Daughter of God" (universal identity) vs "my daughter" (family). Also substring of "daughters" — double-counts.', example: '"Every daughter of God has divine worth" — identity, not womanhood as topic', rec: "keep" },
+                    { word: '"daughters"', risk: "medium", problem: "Same ambiguity. Contains 'daughter.'", rec: "keep" },
+                    { word: '"girl"', risk: "high", problem: '"Girls Camp" (program name), "a little girl" (anecdote about a child), "girl" inside "girls." A talk about 6-year-olds using "girl" is NOT about womanhood.', example: '"The little girl smiled and handed me a drawing" — not about womanhood', rec: "remove" },
+                    { word: '"girls"', risk: "medium", problem: '"Girls Camp" is a program name. Can refer to children, not womanhood.', rec: "keep" },
+                    { word: '"her voice"', risk: "low", problem: "Specific enough. Good.", rec: "keep" },
+                    { word: '"her strength"', risk: "low", problem: "Good.", rec: "keep" },
+                    { word: '"her power"', risk: "low", problem: "Good.", rec: "keep" },
+                    { word: '"her influence"', risk: "low", problem: "Good.", rec: "keep" },
+                    { word: '"divine nature"', risk: "medium", problem: 'LDS Young Women value, but also used for Christ\'s divine nature or humanity\'s divine nature generally. Not exclusively about womanhood.', rec: "keep" },
+                    { word: '"individual worth"', risk: "medium", problem: "Same — YW value but used in non-gendered contexts too.", rec: "keep" },
+                ]
+            }
+        ],
+        missing: ['"sister" / "sisters" (the primary LDS title for women — big omission)', '"Relief Society" (the women\'s organization itself)', '"Eve" (major theological figure)', '"covenant woman" / "covenant women"']
+    },
+    {
+        id: "07",
+        name: "07 — Priesthood Language",
+        desc: "How women talk about priesthood: receiving vs participating.",
+        structural: "Most 'participating' patterns (hold, bear, ordained), when spoken by women, are actually descriptions of what MEN do. The script can't distinguish between a woman talking ABOUT priesthood exercise vs describing HER OWN participation. This is a fundamental design flaw — the same words mean different things depending on speaker gender.",
+        lists: [
+            {
+                name: "RECEIVING_PATTERNS",
+                words: [
+                    { word: '"priesthood blessing(s)"', risk: "low", problem: "Clear receiving frame.", rec: "keep" },
+                    { word: '"blessed by the priesthood"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"power of the priesthood"', risk: "high", problem: '"The power of the priesthood is available to all" (recent inclusive framing). Categorizing this as "receiving" misses a major rhetorical shift.', rec: "fix" },
+                    { word: '"through the priesthood"', risk: "medium", problem: "Context-dependent.", rec: "keep" },
+                    { word: '"by the priesthood"', risk: "medium", problem: "Context-dependent.", rec: "keep" },
+                    { word: '"priesthood holder(s)"', risk: "low", problem: "References the male holder. Clear.", rec: "keep" },
+                    { word: '"his/husband\'s/father\'s priesthood"', risk: "low", problem: "Clear possessive = receiving frame.", rec: "keep" },
+                    { word: '"receive the priesthood"', risk: "medium", problem: "Men 'receive' it too (ordination). Same phrase, different meaning by gender.", rec: "keep" },
+                ]
+            },
+            {
+                name: "PARTICIPATING_PATTERNS",
+                words: [
+                    { word: '"priesthood power"', risk: "high", problem: 'Very similar to "power of the priesthood" in the receiving list. When a woman says it, she\'s usually still describing male authority.', rec: "fix" },
+                    { word: '"our priesthood"', risk: "medium", problem: '"Our priesthood leaders" = institutional, not participating.', rec: "keep" },
+                    { word: '"priesthood authority"', risk: "medium", problem: "Usually references institutional/male authority.", rec: "keep" },
+                    { word: '"honor the priesthood"', risk: "medium", problem: "When women say this, they typically mean honoring men who hold it. That's SUPPORTING, not participating.", rec: "fix" },
+                    { word: '"magnify the priesthood"', risk: "medium", problem: "Same — usually about men magnifying their callings.", rec: "fix" },
+                    { word: '"priesthood keys"', risk: "medium", problem: "Women don't hold priesthood keys. When they mention it, they're referencing male authority.", rec: "fix" },
+                    { word: '"hold/bear/ordained to the priesthood"', risk: "low", problem: "Women aren't ordained. When they say this, they're describing men — not their own participation.", rec: "fix" },
+                ]
+            }
+        ],
+        missing: ['"priesthood leader(s)" (extremely common)', '"priesthood session" (male-only meeting)', '"set apart" (priesthood act)', '"preside" / "presiding"']
+    },
+    {
+        id: "08",
+        name: "08 — Modesty",
+        desc: "Who talks about modesty, and who is it directed at?",
+        lists: [
+            {
+                name: "STRICT_MODESTY (used for counting)",
+                words: [
+                    { word: '"modesty"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"modest"', risk: "medium", problem: '"A modest home" = small/humble. "A modest sum" = small amount. Financial/scale meaning is common.', example: '"They lived in a modest home in rural Idaho" — not about dress', rec: "keep" },
+                    { word: '"immodest"', risk: "low", problem: "Almost always about dress/behavior.", rec: "keep" },
+                    { word: '"immodesty"', risk: "low", problem: "Clear.", rec: "keep" },
+                ]
+            },
+            {
+                name: "FEMALE/MALE_TARGETS (context detection)",
+                words: [
+                    { word: '"her"', risk: "high", problem: 'One of the most common words in English. In a 150-character window, "her" matches constantly. Will overwhelmingly classify mentions as female-directed even when they aren\'t.', example: '"Her modest home was in the valley" — "her" is possessive, not a target', rec: "remove" },
+                    { word: '"his"', risk: "high", problem: "Same problem in reverse.", rec: "remove" },
+                    { word: '"man"', risk: "high", problem: 'Substring of "woman," "many," "manner," "command." The word "woman" triggers both the female AND male target lists.', rec: "remove" },
+                    { word: '"men"', risk: "high", problem: 'Substring of "women," "mention," "mental." "women" contains "men" — so it triggers BOTH lists simultaneously.', rec: "remove" },
+                    { word: '"young women/men"', risk: "low", problem: "Clear. Also LDS program names.", rec: "keep" },
+                    { word: '"girls/boys"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"daughters/sons"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"sister/brother"', risk: "medium", problem: "LDS titles ('Sister Smith') — matches names, not just targets.", rec: "keep" },
+                    { word: '"woman/women" (in targets)', risk: "low", problem: "Clear in modesty context.", rec: "keep" },
+                ]
+            }
+        ],
+        missing: ['"wife" / "wives" (female target)', '"husband" / "husbands" (male target)']
+    },
+    {
+        id: "09",
+        name: "09 — Heavenly Mother",
+        desc: "The cleanest, best-designed word list in the project.",
+        lists: [
+            {
+                name: "HEAVENLY_MOTHER_PHRASES",
+                words: [
+                    { word: '"heavenly mother"', risk: "low", problem: "Clear and unambiguous.", rec: "keep" },
+                    { word: '"mother in heaven"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"heavenly parents"', risk: "medium", problem: "Implies Heavenly Mother but isn't an explicit mention. The script correctly tracks this separately in Analysis 5.", rec: "keep" },
+                    { word: '"divine mother"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"eternal mother"', risk: "medium", problem: 'Could refer to the Church as "eternal mother" or Mary. Rare edge case.', rec: "keep" },
+                ]
+            },
+            {
+                name: "HEAVENLY_FATHER_PHRASES (for ratio comparison)",
+                words: [
+                    { word: '"heavenly father"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"father in heaven"', risk: "low", problem: "Clear.", rec: "keep" },
+                ]
+            }
+        ],
+        missing: ['"god the father" / "eternal father" (for fairer ratio comparison — Heavenly Father is undercounted without these)']
+    },
+    {
+        id: "10",
+        name: "10 — What Women Don't Say",
+        desc: "The most word lists, the most bias risk. Multiple catastrophic substring collisions.",
+        structural: '"war" matches inside "ward" (an LDS congregation mentioned in nearly every talk). "freedom" matches theological freedom ("freedom from sin"), not political freedom. "virtue" is double-counted here AND in script 08. "judge" matches inside "judgment" for double-counting.',
+        lists: [
+            {
+                name: "Priesthood authority",
+                words: [
+                    { word: '"priesthood authority"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"keys of the priesthood"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"priesthood power"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"priesthood holder(s)"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"priesthood keys"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"ordained"', risk: "medium", problem: '"God ordained that..." (decreed). "Foreordained" contains "ordained" as substring.', rec: "fix" },
+                ]
+            },
+            {
+                name: "Doctrinal correction",
+                words: [
+                    { word: '"false doctrine"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"apostasy"', risk: "medium", problem: '"The Great Apostasy" = historical period, not a corrective warning.', rec: "keep" },
+                    { word: '"heresy"', risk: "low", problem: "Clear, but rare in LDS talks.", rec: "keep" },
+                    { word: '"false teaching"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"wolves in sheep"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"beware of"', risk: "medium", problem: '"Beware of debt" — general warning, not doctrinal correction.', rec: "keep" },
+                ]
+            },
+            {
+                name: "War & military",
+                words: [
+                    { word: '"war"', risk: "high", problem: 'CATASTROPHIC: "ward".count("war") = 1. "Ward" is the LDS term for a local congregation, mentioned in nearly EVERY talk. Every "ward" counts as "war." Also catches "war in heaven" (theology) and "spiritual warfare" (metaphor).', example: '"Our ward organized a service project" → counted as war/military', rec: "remove" },
+                    { word: '"warfare"', risk: "medium", problem: '"Spiritual warfare" is metaphorical, not military.', rec: "keep" },
+                    { word: '"military"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"soldier(s)"', risk: "medium", problem: '"Soldiers of Christ" — metaphorical.', rec: "keep" },
+                    { word: '"battle"', risk: "medium", problem: '"Battle against sin," "battle of life" — constant metaphorical use.', rec: "keep" },
+                    { word: '"combat"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"troops"', risk: "low", problem: "Clear.", rec: "keep" },
+                ]
+            },
+            {
+                name: "Finances & tithing",
+                words: [
+                    { word: '"tithing" / "tithes"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"fast offering"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"financial"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"temporal welfare"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"consecration"', risk: "medium", problem: 'Two LDS meanings: (1) financial consecration, (2) spiritual dedication. "Consecrate your life to God" is not about finances.', rec: "keep" },
+                ]
+            },
+            {
+                name: "Politics & government",
+                words: [
+                    { word: '"government"', risk: "medium", problem: '"Church government" vs "secular government" — different topics conflated.', rec: "keep" },
+                    { word: '"constitution"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"political"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"legislation"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"civic"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"democracy"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"freedom"', risk: "high", problem: '"Freedom from sin," "freedom through the Atonement," "agency and freedom" — core LDS theology about moral agency. Will massively inflate this category with non-political hits.', example: '"The Atonement brings us freedom from spiritual bondage" — theology, not politics', rec: "remove" },
+                    { word: '"liberty"', risk: "medium", problem: 'Same issue but less common: "the liberty wherewith Christ hath made us free" (scriptural).', rec: "keep" },
+                ]
+            },
+            {
+                name: "Sexuality & chastity",
+                words: [
+                    { word: '"chastity"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"sexual"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"morality"', risk: "medium", problem: '"Moral courage," "moral compass" — broader than sexuality.', rec: "keep" },
+                    { word: '"pornography"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"immorality"', risk: "medium", problem: "In LDS, almost always sexual. Probably fine.", rec: "keep" },
+                    { word: '"virtue"', risk: "high", problem: 'Double-counted here AND in script 08 (modesty). "A man of great virtue" = general moral excellence. "By the virtue of his blood" = scriptural. Multiple non-sexual meanings.', rec: "remove" },
+                    { word: '"purity"', risk: "medium", problem: '"Purity of heart" is a beatitude, not about sexuality.', rec: "keep" },
+                ]
+            },
+            {
+                name: "Rebuke & warning",
+                words: [
+                    { word: '"rebuke"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"condemn"', risk: "medium", problem: "Scriptural quotations: 'he that believeth not shall be condemned.'", rec: "keep" },
+                    { word: '"reprimand"', risk: "low", problem: "Clear, probably very rare.", rec: "keep" },
+                    { word: '"woe unto"', risk: "low", problem: "Clear scriptural warning.", rec: "keep" },
+                    { word: '"shame"', risk: "medium", problem: '"I felt shame" = emotion, opposite of rebuking. "Shame on" = rebuke. Different directions.', rec: "keep" },
+                    { word: '"warning" / "warned"', risk: "medium", problem: '"Without warning" (narrative) is not a rebuke.', rec: "keep" },
+                ]
+            },
+            {
+                name: "Sin & judgment",
+                words: [
+                    { word: '"judgment"', risk: "medium", problem: '"Good judgment" (wisdom) vs "day of judgment" (eschatological). Different concepts.', rec: "keep" },
+                    { word: '"judge"', risk: "high", problem: 'Substring of "judgment" — EVERY "judgment" also counts "judge." Double-counting. Also "who are we to judge?" is ANTI-judgment, the opposite of this category.', rec: "remove" },
+                    { word: '"unworthy"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"sinner(s)"', risk: "low", problem: "Clear. Plural contains singular — double-counts.", rec: "fix" },
+                    { word: '"transgression"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"wickedness"', risk: "low", problem: "Clear.", rec: "keep" },
+                ]
+            },
+            {
+                name: "Love & compassion",
+                words: [
+                    { word: '"love"', risk: "medium", problem: "Appears in nearly EVERY talk. Universal — not useful for distinguishing topics. Also substring of 'beloved,' 'loved,' 'lovely.'", rec: "keep" },
+                    { word: '"compassion"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"kindness"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"charity"', risk: "medium", problem: 'In LDS = "the pure love of Christ" (theological), not charitable giving. Still about love though.', rec: "keep" },
+                    { word: '"tender"', risk: "medium", problem: '"Tender mercies" is an LDS stock phrase.', rec: "keep" },
+                    { word: '"merciful"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"empathy"', risk: "low", problem: "Clear. Modern word — rare in older talks.", rec: "keep" },
+                ]
+            },
+            {
+                name: "Family relationships",
+                words: [
+                    { word: '"family" / "families"', risk: "medium", problem: "Nearly universal. 'The Family Proclamation' is a document title.", rec: "keep" },
+                    { word: '"husband" / "wife"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"marriage"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"children"', risk: "medium", problem: '"Children of God" = universal theological identity, not family. Very common non-family usage.', example: '"We are all children of a loving Heavenly Father" — not about parenting', rec: "keep" },
+                    { word: '"parent(s)"', risk: "low", problem: '"Heavenly parents" would count here. Singular is substring of plural.', rec: "fix" },
+                ]
+            },
+            {
+                name: "Personal stories",
+                words: [
+                    { word: '"i remember"', risk: "medium", problem: '"I remember the words of the prophet" — scriptural, not personal.', rec: "keep" },
+                    { word: '"let me share"', risk: "low", problem: "Clear story intro.", rec: "keep" },
+                    { word: '"a story"', risk: "medium", problem: '"The story of the Prodigal Son" is scriptural, not personal.', rec: "keep" },
+                    { word: '"my experience"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"when i was"', risk: "low", problem: "Clear personal marker.", rec: "keep" },
+                    { word: '"a young"', risk: "medium", problem: "Very common fragment. 'A young man approached' is about someone else.", rec: "keep" },
+                    { word: '"growing up"', risk: "low", problem: "Clear.", rec: "keep" },
+                ]
+            }
+        ],
+        missing: []
+    },
+    {
+        id: "11",
+        name: "11 — Prayer Language",
+        desc: "Mostly solid. A few edge cases in the 'what they pray for' detection.",
+        lists: [
+            {
+                name: "PRAYER_MARKERS",
+                words: [
+                    { word: '"i/we pray that/for"', risk: "low", problem: "Clear prayer markers.", rec: "keep" },
+                    { word: '"in my/our prayers"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"pray to/unto"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"prayed that/for"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"knelt/kneeling in prayer"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"bowed my head"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"closed my eyes"', risk: "medium", problem: 'Could be non-prayer: "I closed my eyes and tried to sleep."', rec: "keep" },
+                    { word: '"asked heavenly father/god"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"pleaded with"', risk: "medium", problem: '"Pleaded with my son to come back" — not prayer.', rec: "keep" },
+                    { word: '"cried unto"', risk: "low", problem: "Scriptural prayer language.", rec: "keep" },
+                ]
+            },
+            {
+                name: "ADDRESSES (who is addressed — in prayer context)",
+                words: [
+                    { word: '"heavenly father"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"god" / "dear god"', risk: "medium", problem: '"God" appears in many non-address phrases within prayer windows.', rec: "keep" },
+                    { word: '"lord" / "dear lord"', risk: "medium", problem: '"Lord" is extremely common. Will appear in nearly every prayer window.', rec: "keep" },
+                    { word: '"father" / "our father"', risk: "high", problem: 'DOUBLE-COUNTS with "Heavenly Father" category. Every "Heavenly Father" triggers BOTH categories. Also "my father taught me" (narrative) isn\'t an address.', rec: "remove" },
+                    { word: '"jesus/christ/savior/redeemer"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"heavenly parents"', risk: "low", problem: "Clear.", rec: "keep" },
+                ]
+            },
+            {
+                name: "PRAYER_OBJECTS (what they pray for)",
+                words: [
+                    { word: '"guide/guidance/direct/direction"', risk: "low", problem: "Clear in prayer context.", rec: "keep" },
+                    { word: '"lead"', risk: "medium", problem: '"Lead by example" — not a prayer request.', rec: "keep" },
+                    { word: '"strength/help/support/sustain"', risk: "medium", problem: '"Sustain" in LDS = raising hand to support leaders.', rec: "keep" },
+                    { word: '"know" / "knowledge"', risk: "high", problem: 'Extremely common words. "I know that God lives" in a prayer window is testimony, not a prayer REQUEST for understanding. Inflates the Understanding category.', rec: "remove" },
+                    { word: '"comfort/peace/calm/heal"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"protect/protection/safety"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"forgive/forgiveness/mercy"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"thank/grateful/gratitude"', risk: "low", problem: "Clear.", rec: "keep" },
+                    { word: '"children/family/son/daughter"', risk: "medium", problem: '"Son of God" (Jesus) in a prayer window counts as praying for children/family.', example: '"We pray to the Son of God" — counted as praying for children', rec: "fix" },
+                    { word: '"spirit/holy ghost/comforter"', risk: "medium", problem: '"Spirit of the meeting" — not always the Holy Spirit.', rec: "keep" },
+                ]
+            }
+        ],
+        missing: []
+    }
+];
+
+// ════════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════════
+
+const decisions = {};  // { "scriptId:listName:wordIndex": "keep"|"remove"|"fix" }
+let totalWords = 0;
+
+function render() {
+    const content = document.getElementById('content');
+    const tocList = document.getElementById('tocList');
+    let html = '';
+    let tocHtml = '';
+
+    scripts.forEach(script => {
+        let scriptWordCount = 0;
+        script.lists.forEach(list => { scriptWordCount += list.words.length; });
+
+        tocHtml += `<li><a href="#${script.id}">${script.name}</a> <span class="toc-count">(${scriptWordCount} words)</span></li>`;
+
+        html += `<div class="script-section" id="${script.id}">`;
+        html += `<h2 class="script-header">${script.name}</h2>`;
+        html += `<p class="script-desc">${script.desc}</p>`;
+
+        if (script.structural) {
+            html += `<div class="structural-issue"><strong>Structural issue:</strong> ${script.structural}</div>`;
+        }
+
+        script.lists.forEach(list => {
+            html += `<div class="list-header">${list.name}</div>`;
+
+            list.words.forEach((w, i) => {
+                const key = `${script.id}:${list.name}:${i}`;
+                totalWords++;
+
+                const decided = decisions[key] || '';
+
+                html += `<div class="word-card ${decided ? 'decided-' + decided : ''}" id="card-${key.replace(/[^a-zA-Z0-9]/g, '_')}">`;
+                html += `<span class="risk-dot ${w.risk}" title="${w.risk} risk"></span>`;
+                html += `<div class="word-info">`;
+                html += `<div class="word-name">${w.word}</div>`;
+                html += `<div class="word-problem">${w.problem}</div>`;
+                if (w.example) {
+                    html += `<div class="word-example">${w.example}</div>`;
+                }
+                html += `</div>`;
+                html += `<div class="word-actions">`;
+                html += `<button class="btn ${decided === 'keep' ? 'active-keep' : ''}" onclick="decide('${key}', 'keep')">Keep</button>`;
+                html += `<button class="btn ${decided === 'remove' ? 'active-remove' : ''}" onclick="decide('${key}', 'remove')">Cut</button>`;
+                html += `<button class="btn ${decided === 'fix' ? 'active-fix' : ''}" onclick="decide('${key}', 'fix')">Fix</button>`;
+                html += `</div>`;
+                html += `</div>`;
+            });
+        });
+
+        if (script.missing && script.missing.length > 0) {
+            html += `<div class="missing-section"><strong>Missing — should we add these?</strong><br>`;
+            script.missing.forEach((m, i) => {
+                const mKey = `missing:${script.id}:${i}`;
+                const added = decisions[mKey] === 'keep';
+                html += `<span class="missing-word"><code>${m}</code>`;
+                html += `<button class="missing-btn ${added ? 'added' : ''}" onclick="toggleMissing('${mKey}', this)">${added ? '+ Added' : '+ Add'}</button>`;
+                html += `</span> `;
+            });
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+    });
+
+    content.innerHTML = html;
+    tocList.innerHTML = tocHtml;
+    updateCounts();
+}
+
+function decide(key, action) {
+    if (decisions[key] === action) {
+        delete decisions[key];  // toggle off
+    } else {
+        decisions[key] = action;
+    }
+    save();
+    render();
+}
+
+function toggleMissing(key, btn) {
+    if (decisions[key] === 'keep') {
+        delete decisions[key];
+    } else {
+        decisions[key] = 'keep';
+    }
+    save();
+    render();
+}
+
+function updateCounts() {
+    let keep = 0, remove = 0, fix = 0;
+    Object.values(decisions).forEach(v => {
+        if (v === 'keep') keep++;
+        else if (v === 'remove') remove++;
+        else if (v === 'fix') fix++;
+    });
+    // Only count non-missing decisions toward the total
+    let decidedWords = 0;
+    Object.keys(decisions).forEach(k => {
+        if (!k.startsWith('missing:')) decidedWords++;
+    });
+
+    document.getElementById('keepCount').textContent = keep;
+    document.getElementById('removeCount').textContent = remove;
+    document.getElementById('fixCount').textContent = fix;
+    document.getElementById('undecidedCount').textContent = totalWords - decidedWords;
+
+    const pct = totalWords > 0 ? (decidedWords / totalWords * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function save() {
+    localStorage.setItem('bias-review-decisions', JSON.stringify(decisions));
+}
+
+function loadSaved() {
+    const saved = localStorage.getItem('bias-review-decisions');
+    if (saved) {
+        Object.assign(decisions, JSON.parse(saved));
+    }
+}
+
+function exportDecisions() {
+    const lines = ['BIAS REVIEW DECISIONS', '=' .repeat(50), ''];
+
+    const grouped = {};
+    Object.entries(decisions).forEach(([key, action]) => {
+        const parts = key.split(':');
+        const scriptId = parts[0] === 'missing' ? parts[1] : parts[0];
+        if (!grouped[scriptId]) grouped[scriptId] = { keep: [], remove: [], fix: [], add: [] };
+
+        if (parts[0] === 'missing') {
+            if (action === 'keep') {
+                const script = scripts.find(s => s.id === scriptId);
+                const idx = parseInt(parts[2]);
+                grouped[scriptId].add.push(script.missing[idx]);
+            }
+        } else {
+            const script = scripts.find(s => s.id === scriptId);
+            const list = script.lists.find(l => l.name === parts.slice(1, -1).join(':'));
+            const idx = parseInt(parts[parts.length - 1]);
+            if (list && list.words[idx]) {
+                grouped[scriptId][action].push(list.words[idx].word);
+            }
+        }
+    });
+
+    Object.entries(grouped).forEach(([scriptId, actions]) => {
+        const script = scripts.find(s => s.id === scriptId);
+        lines.push(`## ${script.name}`);
+        if (actions.keep.length) lines.push(`  KEEP: ${actions.keep.join(', ')}`);
+        if (actions.remove.length) lines.push(`  CUT:  ${actions.remove.join(', ')}`);
+        if (actions.fix.length) lines.push(`  FIX:  ${actions.fix.join(', ')}`);
+        if (actions.add.length) lines.push(`  ADD:  ${actions.add.join(', ')}`);
+        lines.push('');
+    });
+
+    // Count summary
+    let keep = 0, remove = 0, fix = 0, add = 0;
+    Object.entries(decisions).forEach(([k, v]) => {
+        if (k.startsWith('missing:') && v === 'keep') add++;
+        else if (v === 'keep') keep++;
+        else if (v === 'remove') remove++;
+        else if (v === 'fix') fix++;
+    });
+    lines.push('─'.repeat(50));
+    lines.push(`TOTALS: ${keep} keep, ${remove} cut, ${fix} fix, ${add} add`);
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'bias-review-decisions.txt';
+    a.click();
+}
+
+// ── Init ──
+loadSaved();
+render();
+</script>
+
+</body>
+</html>

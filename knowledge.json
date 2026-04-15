@@ -1,0 +1,50 @@
+{
+  "dev_profile": {
+    "name": "Michael",
+    "stack": ["python", "pandas", "html", "javascript", "chart.js"],
+    "started": "2026-04-06",
+    "current_project": "Women at the Pulpit — analyzing gender representation in LDS General Conference talks (1971–2025)"
+  },
+  "concepts": [
+    {
+      "name": "web scraping with Python",
+      "level": "L2",
+      "notes": "Wrote concurrent scraper with requests/BeautifulSoup, thread pooling. Solid."
+    },
+    {
+      "name": "pandas data wrangling",
+      "level": "L2",
+      "notes": "Comfortable with read_csv, groupby, apply, filtering. Used across multiple scripts."
+    },
+    {
+      "name": "Chart.js basics",
+      "level": "L1",
+      "notes": "Has a working single-dataset line chart in explorer.html. Says graphs feel fuzzy. Sent to YouTube for multi-dataset tutorial."
+    },
+    {
+      "name": "Chart.js multiple datasets",
+      "level": "L0",
+      "notes": "Encountered during plan to add word comparison chart. Watched YouTube video on it."
+    },
+    {
+      "name": "DOM manipulation / vanilla JS",
+      "level": "L1",
+      "notes": "explorer.html has button toggles, event listeners, innerHTML updates. Functional but self-reported fuzzy on how it all connects."
+    },
+    {
+      "name": "statistical testing (z-test)",
+      "level": "L0",
+      "notes": "z-test is in explorer.html but we haven't discussed it yet."
+    },
+    {
+      "name": "regex word-boundary matching",
+      "level": "L1",
+      "notes": "Used in countIn() for exact word matching. Present in code, not yet discussed."
+    }
+  ],
+  "gaps": [
+    "How Chart.js turns data into visuals (self-identified)",
+    "Multi-dataset charts — in progress, partially built",
+    "Understanding the metric calculations (rate vs raw vs % vs avg) — offered but not explored yet"
+  ]
+}
