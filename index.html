@@ -111,8 +111,7 @@
         <h1>Women at the Pulpit</h1>
         <p class="site-sub">4,001 General Conference talks (1971–2025), searchable, sliceable.</p>
         <p style="font-size:0.78rem;color:var(--muted);line-height:1.5;margin-top:-0.5rem;font-style:italic;">
-            A few notes on the data: women's-session talks are grouped into the main view by default — toggle the Session filter to separate them. Every published conference address is counted, including brief welcome and closing remarks given by the prophet. Sustaining votes, auditing reports, and statistical reports are not in the archive as separate talks and aren't counted here.
-        </p>
+            A few notes on the data: this is a bundled snapshot, not a verified complete census. Women's-session talks are included by default — use the Session filter to compare like sessions. Brief remarks and procedural items may appear among the recorded talks; check the source when interpreting a result.</p>
     </div>
     <a href="https://github.com/MikWess/women-at-the-pulpit" target="_blank" rel="noopener"
        style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:var(--muted);text-decoration:none;padding:0.45rem 0.8rem;border:1px solid var(--border);border-radius:5px;background:var(--card);margin-top:0.4rem;transition:all 0.15s;"
@@ -206,7 +205,7 @@
      ═══════════════════════════════════════════════════════════ -->
 <div class="panel" id="panel-freq">
     <div class="headline" id="freqHeadline">How often do women speak at General Conference?</div>
-    <div class="sub-headline">Every talk counted, split by gender, year by year. The pink line tracks women's share of the pulpit.</div>
+    <div class="sub-headline">Every talk in this dataset counted, split by gender, year by year. The pink line tracks women's share of the pulpit.</div>
 
     <div class="controls">
         <div class="control-group">
@@ -367,7 +366,7 @@
         <p>Built by <strong>Mikey Wessman</strong>, who is interested in understanding human behavior at every level. This is a tool, not an argument. Poke around.</p>
 
         <h3>What you're looking at</h3>
-        <p>Every General Conference talk given by the Church of Jesus Christ of Latter-day Saints from 1971 through 2025 — 4,001 talks in total — scraped from <a href="https://www.churchofjesuschrist.org/study/general-conference" target="_blank">churchofjesuschrist.org</a> and made searchable by word, gender, session, year, and speaker.</p>
+        <p>A snapshot of 4,001 General Conference talks from 1971 through 2025, sourced from <a href="https://www.churchofjesuschrist.org/study/general-conference" target="_blank">churchofjesuschrist.org</a> and made searchable by word, gender, session, year, and speaker.</p>
 
         <h3>Where the data came from</h3>
         <ul>
@@ -380,7 +379,7 @@
         <h3>Methodology notes</h3>
         <ul>
             <li><strong>Word matching.</strong> The word-frequency tool uses word-boundary matching — searching "mother" finds "mother" but not "grandmother" or "mothers". Toggle <em>+ synonyms</em> to include morphological variants and related terms (curated, not algorithmic).</li>
-            <li><strong>"Per 10k words"</strong> is the fairest metric for comparing groups of different sizes. Women have given roughly 6% of talks; raw counts will always favor men. Rate-per-10k-words strips that away.</li>
+            <li><strong>"Per 10k words"</strong> is the fairest metric for comparing groups of different sizes. Women account for 395 of the 4,001 talks in this snapshot (9.9%); raw counts reflect the unequal group sizes. Rate-per-10k-words adjusts for text volume; session and year filters still matter.</li>
             <li><strong>Statistical significance.</strong> Gender comparisons use a two-proportion z-test on word-level rates. p &lt; 0.05 is marked as significant.</li>
             <li><strong>"Surprising words"</strong> are ranked by absolute difference in per-10k rates (for gender gap) or by linear regression slope across years (for time trend). Words appearing fewer than 200 times corpus-wide are excluded to reduce noise.</li>
             <li><strong>"Topics"</strong> are not machine-learned clusters — they're 18 curated keyword sets (e.g. the "Priesthood Authority" topic watches for phrases like <em>aaronic priesthood</em>, <em>melchizedek priesthood</em>, <em>priesthood keys</em>). For each topic, a talk's score is the rate of those keywords per 10,000 words. A talk isn't forced into a single topic — the Topics tab instead ranks talks by how <em>densely</em> each topic appears and shows the top-scoring ones. This avoids the problem of keyword overlap (Jesus Christ and Atonement both mention "savior") while still surfacing which speakers lean into which themes.</li>
@@ -429,7 +428,11 @@ async function loadData() {
         fetch('data/surprising.json'),
         fetch('data/topics.json'),
     ]);
+    for (const [name, response] of [['talks', talksResp], ['surprising', surpResp], ['topics', topicsResp]]) {
+        if (!response.ok) throw new Error(`${name} data returned HTTP ${response.status}`);
+    }
     talks = await talksResp.json();
+    if (!Array.isArray(talks) || talks.length === 0) throw new Error('The talks dataset is empty or invalid');
     surprising = await surpResp.json();
     topicsData = await topicsResp.json();
     minYear = Math.min(...talks.map(t => t.y));
@@ -655,7 +658,7 @@ function doSearch() {
         <div class="stat-item"><div class="stat-num">${total.toLocaleString()}</div><div class="stat-label">Total occurrences</div></div>
         <div class="stat-item"><div class="stat-num f">${wCnt.toLocaleString()}</div><div class="stat-label">Women (${wRate}/10k, ${wPct}% of talks)</div></div>
         <div class="stat-item"><div class="stat-num m">${mCnt.toLocaleString()}</div><div class="stat-label">Men (${mRate}/10k, ${mPct}% of talks)</div></div>
-        <div class="stat-item"><div class="stat-num">${parseFloat(wRate)>parseFloat(mRate)?'&#9792; Women':'&#9794; Men'}</div><div class="stat-label">Say it more (per word)</div></div>
+        <div class="stat-item"><div class="stat-num">${parseFloat(wRate)===parseFloat(mRate)?'Equal at displayed precision':parseFloat(wRate)>parseFloat(mRate)?'&#9792; Women':'&#9794; Men'}</div><div class="stat-label">Say it more (per word)</div></div>
         <div class="stat-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:0.75rem;margin-top:0.25rem;">
             <div class="stat-num" style="font-size:1rem;color:${sigClr}">${sigTxt}</div>
             <div class="stat-label">Gender difference (p = ${pDisp}, z = ${test.z.toFixed(2)})</div>
@@ -979,9 +982,9 @@ function renderFreq() {
     const scales = { x: { stacked: freqBreakdown === 'split' && showCounts, ticks: { maxTicksLimit: freqGroupBy === 'decade' ? 12 : 30 } } };
     if (showCounts && showPct) {
         scales.y  = { beginAtZero:true, stacked: freqBreakdown === 'split', title:{display:true,text:'Talks'}, position:'left' };
-        scales.y2 = { beginAtZero:true, max:50, position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'% women'} };
+        scales.y2 = { beginAtZero:true, max:100, position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'% women'} };
     } else if (showPct) {
-        scales.y = { beginAtZero:true, max:50, title:{display:true,text:'% women'} };
+        scales.y = { beginAtZero:true, max:100, title:{display:true,text:'% women'} };
     } else {
         scales.y = { beginAtZero:true, stacked: freqBreakdown === 'split', title:{display:true,text:'Talks'} };
     }
@@ -1065,7 +1068,7 @@ function selectTopic(name) {
         options:{ responsive:true, plugins:{legend:{display:true,position:'top'}}, scales:{ y:{beginAtZero:true, ticks:{stepSize:1}, title:{display:true,text:'Talks'}}, x:{title:{display:true,text:'Year'}}}}
     });
 
-    // Compare to corpus baseline (6% women overall)
+    // Compare to the current dataset baseline.
     const corpusWomenPct = (talks.filter(t => t.g === 'f').length / talks.length * 100);
     const skew = t.w_pct - corpusWomenPct;
     const skewTxt = skew > 5 ? `over-represented by women (+${skew.toFixed(1)} pts vs corpus)` : skew < -5 ? `under-represented by women (${skew.toFixed(1)} pts vs corpus)` : `roughly matches the corpus baseline`;
@@ -1096,7 +1099,11 @@ function selectTopic(name) {
 }
 
 // GO
-loadData();
+loadData().catch(error => {
+    document.getElementById('status').textContent = `Could not load the explorer: ${error.message}. Serve this folder over HTTP and reload. See README.md for setup.`;
+    document.getElementById('searchInput').disabled = true;
+    document.getElementById('searchBtn').disabled = true;
+});
 </script>
 </body>
 </html>
